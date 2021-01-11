@@ -1,0 +1,88 @@
+---
+title: "dataprep: data preprocessing and plots"
+output: rmarkdown::html_vignette
+vignette: >
+  %\documentclass{article}
+  %\VignetteIndexEntry{dataprep: data preprocessing and plots}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(dataprep)
+library(ggplot2)
+library(scales)
+```
+## Figure 1. Line plots for variables with names that are essentially numeric and logarithmic
+```{r fig.height=4, fig.show='hold', fig.width=6}
+# Descriptive statistics
+descplot(data,5,65)
+```
+
+## Figure 2. Line plots for variables whose names are essentially numeric and logarithmic
+```{r fig.height=3, fig.show='hold', fig.width=4}
+# Selected descriptive statistics, equal to descdata(data,5,65,c('na','min','max','IQR'))
+descplot(data,5,65,c(2,7:9))
+```
+
+## Figure 3. Bar charts for the type of variable names that is character
+```{r fig.height=5, fig.show='hold', fig.width=6}
+# Descriptive statistics
+descplot(data1,3,7)+
+  ggplot2::theme(axis.text.x=ggplot2::element_text(angle=30,hjust=1,vjust=1.1))
+```
+
+## Figure 4. Bar charts for the type of variable names that is character
+```{r fig.height=2.5, fig.show='hold', fig.width=6}
+# Selected descriptive statistics, equal to descplot(data1,3,7,c('min','max','IQR'))
+descplot(data1,3,7,7:9)+
+  ggplot2::theme(axis.text.x=ggplot2::element_text(angle=30,hjust=1,vjust=1.1))
+```
+
+## Figure 5. Particle number size distributions in logarithmic scales
+```{r fig.height=4, fig.show='hold', fig.width=6}
+# Top and bottom percentiles
+percplot(data,5,65,4)
+```
+
+## Figure 6. Particle number size distributions in logarithmic scales with only one part
+```{r fig.height=2.5, fig.show='hold', fig.width=6}
+# Top percentiles
+percplot(data,5,65,4,part=1)
+```
+
+## Figure 7. Particle number size distributions in logarithmic scales with only one part
+```{r fig.height=2.5, fig.show='hold', fig.width=6}
+# Bottom percentiles
+percplot(data,5,65,4,part=0)
+```
+
+## Figure 8. Percentiles of modes in linear scales
+```{r fig.height=5, fig.show='hold', fig.width=6}
+# Top and bottom percentiles
+percplot(data1,3,7,2)+
+  ggplot2::theme(axis.text.x=ggplot2::element_text(angle=30,hjust=1,vjust=1.1))
+```
+
+## Figure 9. Percentiles of modes in linear scales with only one part
+```{r fig.height=3, fig.show='hold', fig.width=6}
+# Top percentiles
+percplot(data1,3,7,2,part=1)+
+  ggplot2::theme(axis.text.x=ggplot2::element_text(angle=30,hjust=1,vjust=1.1))
+```
+
+## Figure 10. Percentiles of modes in linear scales with only one part
+```{r fig.height=3, fig.show='hold', fig.width=6}
+# Bottom percentiles
+percplot(data1,3,7,2,part=0)+
+  ggplot2::theme(axis.text.x=ggplot2::element_text(angle=30,hjust=1,vjust=1.1))
+```
+
+
