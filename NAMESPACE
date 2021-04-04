@@ -1,4 +1,4 @@
 exportPattern("^[[:alpha:]]+")
 importFrom(foreach,"%dopar%")
 importFrom(stats, "IQR", "aggregate", "approx", "complete.cases","median", "quantile", "sd", "setNames")
-importFrom(utils, "installed.packages", "tail","head","object.size")
+importFrom(utils, "object.size")

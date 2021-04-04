@@ -76,23 +76,27 @@ If optimal = T, relatively much more time will be needed to finish the data prep
 A preprocessed data frame after variable deletion, observation deletion, outlier removal, and missing value interpolation.
 }
 \references{
-1. Example data (particle number concentrations in SMEAR I Varrio forest) is from https://avaa.tdata.fi/web/smart/smear/download
+1. Example data is from https://smear.avaa.csc.fi/download. It includes particle number concentrations in SMEAR I Varrio forest.
 
 2. Wickham, H., Francois, R., Henry, L. & Muller, K. 2017. dplyr: A Grammar of Data Manipulation. 0.7.4 ed. http://dplyr.tidyverse.org, https://github.com/tidyverse/dplyr.
 
 3. Wickham, H., Francois, R., Henry, L. & Muller, K. 2019. dplyr: A Grammar of Data Manipulation. R package version 0.8.3. https://CRAN.R-project.org/package=dplyr.
 
-4. Wickham, H. & Henry, L. 2019. tidyr: Tidy Messy Data. R package version 1.0.0. https://CRAN.R-project.org/package=tidyr.
+4. Dowle, M., Srinivasan, A., Gorecki, J., Short, T., Lianoglou, S., Antonyan, E., 2017. data.table: Extension of 'data.frame', 1.10.4-3 ed, http://r-datatable.com.
 
-5. Ushey, K. 2018. RcppRoll: Efficient Rolling / Windowed Operations. R package version 0.3.0. https://CRAN.R-project.org/package=RcppRoll.
+5. Dowle, M., Srinivasan, A., 2021. data.table: Extension of `data.frame`. R package version 1.14.0. https://CRAN.R-project.org/package=data.table.
 
 6. Wallig, M., Microsoft & Weston, S. 2020. foreach: Provides Foreach Looping Construct. R package version 1.5.0. https://CRAN.R-project.org/package=foreach.
 
 7. Ooi, H., Corporation, M. & Weston, S. 2019. doParallel: Foreach Parallel Adaptor for the 'parallel' Package. R package version 1.0.15. https://CRAN.R-project.org/package=doParallel.
+
+8. Zeileis, A. & Grothendieck, G. 2005. zoo: S3 infrastructure for regular and irregular time series. Journal of Statistical Software, 14(6):1-27.
+
+9. Zeileis, A., Grothendieck, G. & Ryan, J.A. 2019. zoo: S3 Infrastructure for Regular and Irregular Time Series (Z's Ordered Observations). R package version 1.8-6. https://cran.r-project.org/web/packages/zoo/.
 }
 
 \author{
-Chun-Sheng Liang <lcs14@mails.tsinghua.edu.cn; liangchunsheng@lzu.edu.cn>
+Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
 }
 
 \seealso{
@@ -101,8 +105,8 @@ Chun-Sheng Liang <lcs14@mails.tsinghua.edu.cn; liangchunsheng@lzu.edu.cn>
 
 \examples{
 # Combine 4 steps in one function
-# In dataprep(data,5,65,4), 26 variables, 924 outliers and 438 observations will be deleted
-# Besides, 5057 missing values will be replaced
+# In dataprep(data,5,65,4), 26 variables, 1097 outliers and 699 observations will be deleted
+# Besides, 6012 missing values will be replaced
 # Setting optimal=T will get optimized result
 # Here, for executing time reason, a smaller example is used to show
 dataprep(data[1:60,c(1,4,18:19)],3,4,2,

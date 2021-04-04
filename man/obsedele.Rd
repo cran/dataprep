@@ -34,28 +34,24 @@ half = 30, cores = NULL)
 }
 }
 \details{
-How to delete observations based on consecutive missing value? The idea here is to remove the observations with incomplete half-hour averages, that is, the observations with at least one variable missing more than half an hour. Besides the design of flexible constraints, the fast C + + optimized algorithm is also used, which saves much more time. Using \code{tidyr::complete} (and \code{dplyr::group_by}, without loop) or basic functions such \code{merge} and \code{seq} (in loop) temporarily to extend the full time period and using the C + + optimized \code{RcppRoll::roll_mean} (much faster than ordinary functions) to calculate the hourly moving average are very important to quickly detect consecutive missing values. For the loop, parallel computing can be conducted using packages \code{parallel}, \code{doParallel}, and \code{foreach}. Further, this method will also be used to delete outliers. In this way, it ensures that the observations with excessive consecutive missing values are deleted completely and the interpolation in time series is reasonable.
+How to delete observations based on consecutive missing value? The idea here is to remove the observations with incomplete half-hour averages, that is, the observations with at least one variable missing more than half an hour. Besides the design of flexible constraints, fast and efficient algorithm is also used, which saves much more time. Using  basic functions such \code{merge} and \code{seq} (in loop) temporarily to extend the full time period and using the fast and efficient  \code{data.table::rleid}, \code{data.table::rowid}, and \code{data.table::setorder} to realize run-length based grouping (even faster than calculating moving average by C++ optimized algorithm) are very important to quickly detect consecutive missing values. For the loop, parallel computing can be conducted using packages \code{parallel}, \code{doParallel}, and \code{foreach}. Further, this method will also be used to delete outliers. In this way, it ensures that the observations with excessive consecutive missing values are deleted completely and the interpolation in time series is reasonable.
 }
 \value{
 A data frame after deleting observations with too many consecutive missing values in time series.
 }
 \references{
-1. Example data (particle number concentrations in SMEAR I Varrio forest) is from https://avaa.tdata.fi/web/smart/smear/download
+1. Example data is from https://smear.avaa.csc.fi/download. It includes particle number concentrations in SMEAR I Varrio forest.
 
-2. Wickham, H., Francois, R., Henry, L. & Muller, K. 2017. dplyr: A Grammar of Data Manipulation. 0.7.4 ed. http://dplyr.tidyverse.org, https://github.com/tidyverse/dplyr.
+2. Dowle, M., Srinivasan, A., Gorecki, J., Short, T., Lianoglou, S., Antonyan, E., 2017. data.table: Extension of 'data.frame', 1.10.4-3 ed, http://r-datatable.com.
 
-3. Wickham, H., Francois, R., Henry, L. & Muller, K. 2019. dplyr: A Grammar of Data Manipulation. R package version 0.8.3. https://CRAN.R-project.org/package=dplyr.
+3. Dowle, M., Srinivasan, A., 2021. data.table: Extension of `data.frame`. R package version 1.14.0. https://CRAN.R-project.org/package=data.table.
 
-4. Wickham, H. & Henry, L. 2019. tidyr: Tidy Messy Data. R package version 1.0.0. https://CRAN.R-project.org/package=tidyr.
+4. Wallig, M., Microsoft & Weston, S. 2020. foreach: Provides Foreach Looping Construct. R package version 1.5.0. https://CRAN.R-project.org/package=foreach.
 
-5. Ushey, K. 2018. RcppRoll: Efficient Rolling / Windowed Operations. R package version 0.3.0. https://CRAN.R-project.org/package=RcppRoll.
-
-6. Wallig, M., Microsoft & Weston, S. 2020. foreach: Provides Foreach Looping Construct. R package version 1.5.0. https://CRAN.R-project.org/package=foreach.
-
-7. Ooi, H., Corporation, M. & Weston, S. 2019. doParallel: Foreach Parallel Adaptor for the 'parallel' Package. R package version 1.0.15. https://CRAN.R-project.org/package=doParallel.
+5. Ooi, H., Corporation, M. & Weston, S. 2019. doParallel: Foreach Parallel Adaptor for the 'parallel' Package. R package version 1.0.15. https://CRAN.R-project.org/package=doParallel.
 }
 \author{
-Chun-Sheng Liang <lcs14@mails.tsinghua.edu.cn; liangchunsheng@lzu.edu.cn>
+Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
 }
 
 \examples{

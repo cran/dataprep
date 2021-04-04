@@ -43,10 +43,10 @@ A data frame of descriptive statistics:
 \item{IQR}{interquartile range of each item}
 }
 \references{
-1. Example data (particle number concentrations in SMEAR I Varrio forest) is from https://avaa.tdata.fi/web/smart/smear/download
+1. Example data is from https://smear.avaa.csc.fi/download. It includes particle number concentrations in SMEAR I Varrio forest.
 }
 \author{
-Chun-Sheng Liang <lcs14@mails.tsinghua.edu.cn; liangchunsheng@lzu.edu.cn>
+Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
 }
 
 \seealso{

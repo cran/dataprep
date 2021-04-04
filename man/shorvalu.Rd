@@ -30,7 +30,7 @@ It offers a robust interpolation method based on considering time gaps and avail
 A data frame with missing values being replaced linearly within short periods and with values to refer to.
 }
 \references{
-1. Example data (particle number concentrations in SMEAR I Varrio forest) is from https://avaa.tdata.fi/web/smart/smear/download
+1. Example data is from https://smear.avaa.csc.fi/download. It includes particle number concentrations in SMEAR I Varrio forest.
 
 2. Wickham, H., Francois, R., Henry, L. & Muller, K. 2017. dplyr: A Grammar of Data Manipulation. 0.7.4 ed. http://dplyr.tidyverse.org, https://github.com/tidyverse/dplyr.
 
@@ -41,7 +41,7 @@ A data frame with missing values being replaced linearly within short periods an
 5. Zeileis, A., Grothendieck, G. & Ryan, J.A. 2019. zoo: S3 Infrastructure for Regular and Irregular Time Series (Z's Ordered Observations). R package version 1.8-6. https://cran.r-project.org/web/packages/zoo/.
 }
 \author{
-Chun-Sheng Liang <lcs14@mails.tsinghua.edu.cn; liangchunsheng@lzu.edu.cn>
+Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
 }
 
 \examples{

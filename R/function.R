@@ -406,12 +406,26 @@ obsedele=function(data,start=NULL,end=NULL,group=NULL,by="min",half=30,cores=NUL
       c=foreach::foreach(i=unique(data$period),.combine=rbind) %dopar% {
         a=data[data$period==i,]
         b=merge(a,data.frame(date=seq(min(a$date),max(a$date),by=by)),all.y=TRUE)
-        if(nrow(b)<2*half-1) {
-          cat('Too short periods are deleted')
-          b[,start:end]=NA
-        } else {
-          b[,start:end]=sapply(b[,start:end],function(x) c(RcppRoll::roll_mean(x[1:(2*half-2)],half,na.rm=TRUE,align='left'),RcppRoll::roll_mean(x,2*half-1,na.rm=TRUE),RcppRoll::roll_mean(tail(x,2*half-2),half,na.rm=TRUE,align='right')))
+        if(any(is.na(b[1,start:end]))) {
+          cond=sapply(b[start:end],function(x) min(which(!is.na(x))))
+          if(any(cond>half)) {
+            b=b[(1+max(cond)-half):nrow(b),]
+          }
         }
+        if(any(is.na(b[nrow(b),start:end]))) {
+          cond=sapply(b[nrow(b):1,][start:end],function(x) min(which(!is.na(x))))
+          if(any(cond>half)) {
+            b=b[1:(nrow(b)-max(cond)+half),]
+          }
+        }
+        vec=b[,start:end][b[,start:end]<Inf]
+        id=data.table::rleid(vec)
+        runid=data.table::rowid(id)
+        DT=data.table::data.table(runid=runid,by=id)
+        vec[DT$runid<=half]=0
+        runidrev=data.table::setorder(DT,by,-runid)$runid
+        vec[runidrev<=half]=0
+        b[,start:end]=vec
         b
       }
       parallel::stopCluster(cl)
@@ -420,12 +434,26 @@ obsedele=function(data,start=NULL,end=NULL,group=NULL,by="min",half=30,cores=NUL
       for (i in unique(data$period)) {
         a=data[data$period==i,]
         b=merge(a,data.frame(date=seq(min(a$date),max(a$date),by=by)),all.y=TRUE)
-        if(nrow(b)<2*half-1) {
-          warning('Too short periods are deleted')
-          b[,start:end]=NA
-        } else {
-          b[,start:end]=sapply(b[,start:end],function(x) c(RcppRoll::roll_mean(x[1:(2*half-2)],half,na.rm=TRUE,align='left'),RcppRoll::roll_mean(x,2*half-1,na.rm=TRUE),RcppRoll::roll_mean(tail(x,2*half-2),half,na.rm=TRUE,align='right')))
+        if(any(is.na(b[1,start:end]))) {
+          cond=sapply(b[start:end],function(x) min(which(!is.na(x))))
+          if(any(cond>half)) {
+            b=b[(1+max(cond)-half):nrow(b),]
+          }
         }
+        if(any(is.na(b[nrow(b),start:end]))) {
+          cond=sapply(b[nrow(b):1,][start:end],function(x) min(which(!is.na(x))))
+          if(any(cond>half)) {
+            b=b[1:(nrow(b)-max(cond)+half),]
+          }
+        }
+        vec=b[,start:end][b[,start:end]<Inf]
+        id=data.table::rleid(vec)
+        runid=data.table::rowid(id)
+        DT=data.table::data.table(runid=runid,by=id)
+        vec[DT$runid<=half]=0
+        runidrev=data.table::setorder(DT,by,-runid)$runid
+        vec[runidrev<=half]=0
+        b[,start:end]=vec
         b$i=i
         dflist[[i]]=b
       }
@@ -437,21 +465,32 @@ obsedele=function(data,start=NULL,end=NULL,group=NULL,by="min",half=30,cores=NUL
       stop('Please move the column group to before start or after end')
     } else {
       data=transform(data,Date=date,check.names=FALSE)
-      data1=data
       data[,group]=factor(data[,group],labels=1:length(unique(data[,group])))
       if(length(find.package(c('foreach','doParallel','parallel'),quiet=TRUE))==3&as.numeric(object.size(data))/1024/1024>10) {
         cores=ifelse(is.null(cores),parallel::detectCores(),cores)
         cl=parallel::makeCluster(cores)
         doParallel::registerDoParallel(cl)
         c=foreach::foreach(i=1:length(unique(data[,group])),.combine=rbind) %dopar% {
-          a=data[data[,group]==i,]
-          b=merge(a,data.frame(date=seq(min(a$date),max(a$date),by=by)),all.y=TRUE)
-          if(nrow(b)<2*half-1) {
-            cat('Too short periods are deleted')
-            b[,start:end]=NA
-          } else {
-            b[,start:end]=sapply(b[,start:end],function(x) c(RcppRoll::roll_mean(x[1:(2*half-2)],half,na.rm=TRUE,align='left'),RcppRoll::roll_mean(x,2*half-1,na.rm=TRUE),RcppRoll::roll_mean(tail(x,2*half-2),half,na.rm=TRUE,align='right')))
+          if(any(is.na(b[1,start:end]))) {
+            cond=sapply(b[start:end],function(x) min(which(!is.na(x))))
+            if(any(cond>half)) {
+              b=b[(1+max(cond)-half):nrow(b),]
+            }
           }
+          if(any(is.na(b[nrow(b),start:end]))) {
+            cond=sapply(b[nrow(b):1,][start:end],function(x) min(which(!is.na(x))))
+            if(any(cond>half)) {
+              b=b[1:(nrow(b)-max(cond)+half),]
+            }
+          }
+          vec=b[,start:end][b[,start:end]<Inf]
+          id=data.table::rleid(vec)
+          runid=data.table::rowid(id)
+          DT=data.table::data.table(runid=runid,by=id)
+          vec[DT$runid<=half]=0
+          runidrev=data.table::setorder(DT,by,-runid)$runid
+          vec[runidrev<=half]=0
+          b[,start:end]=vec
           b
         }
         parallel::stopCluster(cl)
@@ -460,29 +499,40 @@ obsedele=function(data,start=NULL,end=NULL,group=NULL,by="min",half=30,cores=NUL
         for (i in 1:length(unique(data[,group]))) {
           a=data[data[,group]==i,]
           b=merge(a,data.frame(date=seq(min(a$date),max(a$date),by=by)),all.y=TRUE)
-          if(nrow(b)<2*half-1) {
-            warning('Too short periods are deleted')
-            b[,start:end]=NA
-          } else {
-            b[,start:end]=sapply(b[,start:end],function(x) c(RcppRoll::roll_mean(x[1:(2*half-2)],half,na.rm=TRUE,align='left'),RcppRoll::roll_mean(x,2*half-1,na.rm=TRUE),RcppRoll::roll_mean(tail(x,2*half-2),half,na.rm=TRUE,align='right')))
+          if(any(is.na(b[1,start:end]))) {
+            cond=sapply(b[start:end],function(x) min(which(!is.na(x))))
+            if(any(cond>half)) {
+              b=b[(1+max(cond)-half):nrow(b),]
+            }
           }
+          if(any(is.na(b[nrow(b),start:end]))) {
+            cond=sapply(b[nrow(b):1,][start:end],function(x) min(which(!is.na(x))))
+            if(any(cond>half)) {
+              b=b[1:(nrow(b)-max(cond)+half),]
+            }
+          }
+          vec=b[,start:end][b[,start:end]<Inf]
+          id=data.table::rleid(vec)
+          runid=data.table::rowid(id)
+          DT=data.table::data.table(runid=runid,by=id)
+          vec[DT$runid<=half]=0
+          runidrev=data.table::setorder(DT,by,-runid)$runid
+          vec[runidrev<=half]=0
+          b[,start:end]=vec
           b$i=i
           dflist[[i]]=b
         }
         c=do.call(rbind,dflist)
       }
-      d=transform(data,full=ifelse(complete.cases(subset(c,!is.na(Date))[start:end]),1,0),check.names=FALSE)
-      d[,group]=data1[data1$date==d$date,group]
     }
   }
-  e=subset(d,full==1)[,1:end]
-  f=transform(e,period=cumsum(ifelse(c(0,as.numeric(diff(date),units='mins'))>=half|c(0,as.numeric(diff(date),units='mins'))==0,1,0)),check.names=FALSE)
-  g=f[f$period%in%unique(f$period)[apply(aggregate(!is.na(f[start:end]),list(f$period),sum)[,-1],
-                                         1,function(x) all(x!=0))],1:end]
-  g=cbind(g,df[df$date%in%g$date,][setdiff(names(df),names(g))])[names(df)]
+  d=subset(c,!is.na(Date))
+  e=transform(d,full=ifelse(complete.cases(d[,start:end]),1,0),check.names=FALSE)
+  f=subset(e,full==1)
+  g=subset(df,date%in%f$date)
   rownames(g)=NULL
-  cat(paste0(nrow(data)-nrow(g),' observations are deleted'),'\n')
-  cat(paste0('Time used by obsedele: ',format(Sys.time()-t0,digits=3)),'\n')
+  cat(paste0(nrow(df)-nrow(g),' observations are deleted'),'\n')
+  cat(paste0('Time used by obsdel: ',format(Sys.time()-t0,digits=3)),'\n')
   g
 }
 
@@ -493,8 +543,10 @@ condextr=function(data,start=NULL,end=NULL,group=NULL,top=.995,top.error=.1,top.
     warning('Without a group column, the deleted values may congregate in a minority of periods')
     for (j in 1:times) {
       for (i in 1:interval) {
-        a[,start:end]=sapply(a[,start:end],function(x) x=ifelse(x==max(x,na.rm=TRUE)&x>quantile(x,top,na.rm=TRUE)*(1+top.error)+10^(floor(log10(quantile(x,top,na.rm=TRUE))))*top.magnitude|
-                                                                  x==min(x,na.rm=TRUE)&x<quantile(x,bottom,na.rm=TRUE)*(1-bottom.error)-10^(floor(log10(quantile(x,bottom,na.rm=TRUE))))*bottom.magnitude,NA,x))
+        a[,start:end]=sapply(a[,start:end],function(x) {topquan=quantile(x,top,na.rm=TRUE)
+        bottquan=quantile(x,bottom,na.rm=TRUE)
+        ifelse(x==max(x,na.rm=TRUE)&x>topquan*(1+top.error)+10^(floor(log10(topquan)))*top.magnitude|
+                 x==min(x,na.rm=TRUE)&x<bottquan*(1-bottom.error)-10^(floor(log10(bottquan)))*bottom.magnitude,NA,x)})
       }
       a=obsedele(a,start=start,end=end,group=group,by=by,half=half,cores=cores)
     }
@@ -502,8 +554,10 @@ condextr=function(data,start=NULL,end=NULL,group=NULL,top=.995,top.error=.1,top.
     if(length(find.package('dplyr',quiet=TRUE))==1) {
       for (j in 1:times) {
         for (i in 1:interval) {
-          a=dplyr::mutate_at(dplyr::group_by_at(a,group),start:end,function(x) x=ifelse(x==max(x,na.rm=TRUE)&x>quantile(x,top,na.rm=TRUE)*(1+top.error)+10^(floor(log10(quantile(x,top,na.rm=TRUE))))*top.magnitude|
-                                                                                          x==min(x,na.rm=TRUE)&x<quantile(x,bottom,na.rm=TRUE)*(1-bottom.error)-10^(floor(log10(quantile(x,bottom,na.rm=TRUE))))*bottom.magnitude,NA,x))
+          a=dplyr::mutate_at(dplyr::group_by_at(a,group),start:end,function(x) {topquan=quantile(x,top,na.rm=TRUE)
+          bottquan=quantile(x,bottom,na.rm=TRUE)
+          ifelse(x==max(x,na.rm=TRUE)&x>topquan*(1+top.error)+10^(floor(log10(topquan)))*top.magnitude|
+                   x==min(x,na.rm=TRUE)&x<bottquan*(1-bottom.error)-10^(floor(log10(bottquan)))*bottom.magnitude,NA,x)})
         }
         a=obsedele(a,start=start,end=end,group=group,by=by,half=half,cores=cores)
       }
@@ -512,8 +566,10 @@ condextr=function(data,start=NULL,end=NULL,group=NULL,top=.995,top.error=.1,top.
       for (j in 1:times) {
         for (i in 1:interval) {
           for (k in 1:length(unique(a[,group]))) {
-            a[a[,group]==k,start:end]=sapply(a[a[,group]==k,start:end],function(x) x=ifelse(x==max(x,na.rm=TRUE)&x>quantile(x,top,na.rm=TRUE)*(1+top.error)+10^(floor(log10(quantile(x,top,na.rm=TRUE))))*top.magnitude|
-                                                                                              x==min(x,na.rm=TRUE)&x<quantile(x,bottom,na.rm=TRUE)*(1-bottom.error)-10^(floor(log10(quantile(x,bottom,na.rm=TRUE))))*bottom.magnitude,NA,x))
+            a[a[,group]==k,start:end]=sapply(a[a[,group]==k,start:end],function(x) {topquan=quantile(x,top,na.rm=TRUE)
+            bottquan=quantile(x,bottom,na.rm=TRUE)
+            ifelse(x==max(x,na.rm=TRUE)&x>topquan*(1+top.error)+10^(floor(log10(topquan)))*top.magnitude|
+                     x==min(x,na.rm=TRUE)&x<bottquan*(1-bottom.error)-10^(floor(log10(bottquan)))*bottom.magnitude,NA,x)})
           }
         }
         a=obsedele(a,start=start,end=end,group=group,by=by,half=half,cores=cores)
@@ -595,7 +651,7 @@ optisolu=function(data,start=NULL,end=NULL,group=NULL,interval=35,times=10,top=.
 
 shorvalu=function(data,start,end,intervals=30) {
   t0=Sys.time()
-  a=transform(data,period=cumsum(ifelse(c(0,as.numeric(diff(date),units='mins'))>=intervals|c(0,as.numeric(diff(date),units='mins'))==0,1,0)),check.names=FALSE)
+  a=transform(data,period=cumsum(ifelse(c(0,as.numeric(diff(date),units='mins'))>intervals|c(0,as.numeric(diff(date),units='mins'))==0,1,0)),check.names=FALSE)
   if(length(find.package(c('dplyr','zoo'),quiet=TRUE))==2) {
     b=dplyr::mutate_at(dplyr::group_by(a,period),start:end,function(x) zoo::na.approx(x,rule=2))
     c=data.frame(b,check.names=FALSE)[1:end]

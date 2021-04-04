@@ -18,7 +18,7 @@ A dataframe, matrix, or vector containing zeros.
 A dataframe, matrix, or vector with zeros being turned into missing values.
 }
 \author{
-Chun-Sheng Liang <lcs14@mails.tsinghua.edu.cn; liangchunsheng@lzu.edu.cn>
+Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
 }
 \examples{
 zerona(0:5)

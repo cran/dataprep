@@ -52,7 +52,7 @@ Four scenes are considered according to the scales of x and y axes, namely the r
   \item{100th }{Quantile with \code{probs = 1}}
 }
 \references{
-1. Example data (particle number concentrations in SMEAR I Varrio forest) is from https://avaa.tdata.fi/web/smart/smear/download
+1. Example data is from https://smear.avaa.csc.fi/download. It includes particle number concentrations in SMEAR I Varrio forest.
 
 2. Wickham, H. 2007. Reshaping data with the reshape package. Journal of Statistical Software, 21(12):1-20.
 
@@ -65,7 +65,7 @@ Four scenes are considered according to the scales of x and y axes, namely the r
 6. Wickham, H. & Seidel, D. 2019. scales: Scale Functions for Visualization. R package version 1.1.0. https://CRAN.R-project.org/package=scales.
 }
 \author{
-Chun-Sheng Liang <lcs14@mails.tsinghua.edu.cn; liangchunsheng@lzu.edu.cn>
+Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
 }
 
 \seealso{

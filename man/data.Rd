@@ -83,7 +83,7 @@ The raw data is downloaded from https://avaa.tdata.fi/web/smart/smear/download.
 https://avaa.tdata.fi/web/smart/smear/download
 }
 \references{
-1. Example data (particle number concentrations in SMEAR I Varrio forest) is from https://avaa.tdata.fi/web/smart/smear/download
+1. Example data is from https://smear.avaa.csc.fi/download. It includes particle number concentrations in SMEAR I Varrio forest.
 }
 \examples{
 data

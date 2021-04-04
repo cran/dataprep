@@ -43,7 +43,7 @@ A plot to show the descriptive result of the data, including:
 \item{IQR}{interquartile range of each item}
 }
 \references{
-1. Example data (particle number concentrations in SMEAR I Varrio forest) is from https://avaa.tdata.fi/web/smart/smear/download
+1. Example data is from https://smear.avaa.csc.fi/download. It includes particle number concentrations in SMEAR I Varrio forest.
 
 2. Wickham, H. 2007. Reshaping data with the reshape package. Journal of Statistical Software, 21(12):1-20.
 
@@ -52,7 +52,7 @@ A plot to show the descriptive result of the data, including:
 4. Wickham, H. 2016. ggplot2: elegant graphics for data analysis. Springer-Verlag New York.
 }
 \author{
-Chun-Sheng Liang <lcs14@mails.tsinghua.edu.cn; liangchunsheng@lzu.edu.cn>
+Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
 }
 
 \seealso{
