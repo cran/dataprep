@@ -471,6 +471,8 @@ obsedele=function(data,start=NULL,end=NULL,group=NULL,by="min",half=30,cores=NUL
         cl=parallel::makeCluster(cores)
         doParallel::registerDoParallel(cl)
         c=foreach::foreach(i=1:length(unique(data[,group])),.combine=rbind) %dopar% {
+          a=data[data[,group]==i,]
+          b=merge(a,data.frame(date=seq(min(a$date),max(a$date),by=by)),all.y=TRUE)
           if(any(is.na(b[1,start:end]))) {
             cond=sapply(b[start:end],function(x) min(which(!is.na(x))))
             if(any(cond>half)) {
@@ -577,6 +579,7 @@ condextr=function(data,start=NULL,end=NULL,group=NULL,top=.995,top.error=.1,top.
       a[,group]=data[data$date%in%a$date,group]
     }
   }
+  a=obsedele(a,start=start,end=end,group=group,by=by,half=half,cores=cores)
   rownames(a)=NULL
   cat(paste0(sum(is.na(a[start:end]))-sum(is.na(data[data$date%in%a$date,start:end])),' values are regarded as outliers and deleted excluding those in deleted observations'),'\n')
   cat(paste0(nrow(data)-nrow(a),' observations are deleted in total'),'\n')
@@ -603,6 +606,7 @@ percoutl=function(data,start=NULL,end=NULL,group=NULL,top=.995,bottom=.0025,by='
       a[,group]=data[data$date%in%a$date,group]
     }
   }
+  a=obsedele(a,start=start,end=end,group=group,by=by,half=half,cores=cores)
   cat(paste0(sum(is.na(a[start:end]))-sum(is.na(data[data$date%in%a$date,start:end])),' values are regarded as outliers and deleted excluding those in deleted observations'),'\n')
   cat(paste0(nrow(data)-nrow(a),' observations are deleted in total'),'\n')
   cat(paste0('Time used by percoutl: ',format(Sys.time()-t0,digits=3)),'\n')

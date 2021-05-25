@@ -1,7 +1,7 @@
 Package: dataprep
 Type: Package
 Title: Efficient and Flexible Data Preprocessing Tools
-Version: 0.1.1
+Version: 0.1.2
 Author: Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>, Hao Wu, Hai-Yan Li, Qiang Zhang, Zhanqing Li, Ke-Bin He, Lanzhou University, Tsinghua University
 Maintainer: Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
 Description: Efficiently and flexibly preprocess data using a set of data filtering, deletion, and interpolation tools.
@@ -21,6 +21,6 @@ VignetteBuilder: knitr, rmarkdown
 Encoding: UTF-8
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2021-04-04 14:15:06 UTC; 92576
+Packaged: 2021-05-25 04:24:39 UTC; 92576
 Repository: CRAN
-Date/Publication: 2021-04-04 14:30:03 UTC
+Date/Publication: 2021-05-25 04:50:02 UTC
