@@ -5,7 +5,7 @@
 Example data (data1, particle number concentrations in SMEAR I Varrio forest)
 }
 \description{
-Calculated from the raw data that is downloaded from https://avaa.tdata.fi/web/smart/smear/download.
+Calculated from the raw data that is downloaded from https://smear.avaa.csc.fi/download.
 }
 \usage{data1}
 \format{

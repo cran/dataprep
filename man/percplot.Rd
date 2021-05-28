@@ -34,7 +34,7 @@ diff = 0.1, part = 'both')
 }
 }
 \details{
-Four scenes are considered according to the scales of x and y axes, namely the ranges of x and y values. For example, the code, \code{sd(diff(log(as.numeric(as.character(names(data[, start:end]))))))/mean(diff(log(as.numeric(as.character(names(data[, start:end])))))) < 0.1 & max(data[, start:end], na.rm = T) / min(data[, start:end], na.rm = T) > = 10^3}, means that the coefficient of variation of the lagged differences of \code{log(x)} is below 0.1 and meanwhile the maximum y is 1000 times greater than or equal to the minimum y.
+Four scenes are considered according to the scales of x and y axes, namely the ranges of x and y values. For example, the code, \code{sd(diff(log(as.numeric(as.character(names(data[, start:end])))))) / mean(diff(log(as.numeric(as.character(names(data[, start:end])))))) < 0.1 & max(data[, start:end], na.rm = T) / min(data[, start:end], na.rm = T) > = 10^3}, means that the coefficient of variation of the lagged differences of \code{log(x)} is below 0.1 and meanwhile the maximum y is 1000 times greater than or equal to the minimum y.
 }
 \value{
   Top (highest or greatest) and bottom (lowest or smallest) percentiles are plotted.

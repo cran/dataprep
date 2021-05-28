@@ -5,7 +5,7 @@
 Example data (particle number concentrations in SMEAR I Varrio forest)
 }
 \description{
-The raw data is downloaded from https://avaa.tdata.fi/web/smart/smear/download.
+The raw data is downloaded from https://smear.avaa.csc.fi/download.
 }
 \usage{data}
 \format{
@@ -80,7 +80,7 @@ The raw data is downloaded from https://avaa.tdata.fi/web/smart/smear/download.
 }
 
 \source{
-https://avaa.tdata.fi/web/smart/smear/download
+https://smear.avaa.csc.fi/download
 }
 \references{
 1. Example data is from https://smear.avaa.csc.fi/download. It includes particle number concentrations in SMEAR I Varrio forest.
