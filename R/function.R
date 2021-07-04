@@ -397,7 +397,10 @@ obsedele=function(data,start=NULL,end=NULL,group=NULL,by="min",half=30,cores=NUL
   t0=Sys.time()
   df=data
   if(is.null(group)||!is.numeric(group)||group<1) {
-    data=transform(data,period=cumsum(ifelse(c(0,as.numeric(diff(date),units='mins'))>=half|c(0,as.numeric(diff(date),units='mins'))==0,1,0)),
+    unit=c("secs","mins","hours","days","weeks")
+    num=ifelse(grepl("^[A-Za-z]+$",by),1,as.numeric(gsub(".*?([0-9]+).*","\\1",by)))
+    char=gsub(".*?([a-z]+).*", "\\1",by)
+    data=transform(data,period=cumsum(ifelse(c(0,as.numeric(diff(date),units=unit[grepl(char,unit)]))>half*num|c(0,as.numeric(diff(date),units=unit[grepl(char,unit)]))==0,1,0)),
                    Date=date,check.names=FALSE)
     if(length(find.package(c('foreach','doParallel','parallel'),quiet=TRUE))==3&as.numeric(object.size(data))/1024/1024>10) {
       cores=ifelse(is.null(cores),parallel::detectCores(),cores)
@@ -407,26 +410,34 @@ obsedele=function(data,start=NULL,end=NULL,group=NULL,by="min",half=30,cores=NUL
         a=data[data$period==i,]
         b=merge(a,data.frame(date=seq(min(a$date),max(a$date),by=by)),all.y=TRUE)
         if(any(is.na(b[1,start:end]))) {
-          cond=sapply(b[start:end],function(x) min(which(!is.na(x))))
-          if(any(cond>half)) {
-            b=b[(1+max(cond)-half):nrow(b),]
+          cond=sapply(b[start:end],function(x) ifelse(all(is.na(x)),Inf,min(which(!is.na(x)))))
+          if(any(cond>half)&!any(is.infinite(cond))) {
+            b=b[(max(cond)-half):nrow(b),]
+          }
+          if(any(is.infinite(cond))) {
+            b=NULL
           }
         }
         if(any(is.na(b[nrow(b),start:end]))) {
-          cond=sapply(b[nrow(b):1,][start:end],function(x) min(which(!is.na(x))))
-          if(any(cond>half)) {
+          cond=sapply(b[nrow(b):1,][start:end],function(x) ifelse(all(is.na(x)),Inf,min(which(!is.na(x)))))
+          if(any(cond>half)&!any(is.infinite(cond))) {
             b=b[1:(nrow(b)-max(cond)+half),]
           }
+          if(any(is.infinite(cond))) {
+            b=NULL
+          }
         }
-        vec=b[,start:end][b[,start:end]<Inf]
-        id=data.table::rleid(vec)
-        runid=data.table::rowid(id)
-        DT=data.table::data.table(runid=runid,by=id)
-        vec[DT$runid<=half]=0
-        runidrev=data.table::setorder(DT,by,-runid)$runid
-        vec[runidrev<=half]=0
-        b[,start:end]=vec
-        b
+        if(!is.null(b)) {
+          vec=b[,start:end][b[,start:end]<Inf]
+          id=data.table::rleid(vec)
+          runid=data.table::rowid(id)
+          DT=data.table::data.table(runid=runid,by=id)
+          vec[DT$runid<=half]=0
+          runidrev=data.table::setorder(DT,by,-runid)$runid
+          vec[runidrev<=half]=0
+          b[,start:end]=vec
+          b
+        }
       }
       parallel::stopCluster(cl)
     } else {
@@ -435,31 +446,38 @@ obsedele=function(data,start=NULL,end=NULL,group=NULL,by="min",half=30,cores=NUL
         a=data[data$period==i,]
         b=merge(a,data.frame(date=seq(min(a$date),max(a$date),by=by)),all.y=TRUE)
         if(any(is.na(b[1,start:end]))) {
-          cond=sapply(b[start:end],function(x) min(which(!is.na(x))))
-          if(any(cond>half)) {
-            b=b[(1+max(cond)-half):nrow(b),]
+          cond=sapply(b[start:end],function(x) ifelse(all(is.na(x)),Inf,min(which(!is.na(x)))))
+          if(any(cond>half)&!any(is.infinite(cond))) {
+            b=b[(max(cond)-half):nrow(b),]
+          }
+          if(any(is.infinite(cond))) {
+            b=NULL
           }
         }
         if(any(is.na(b[nrow(b),start:end]))) {
-          cond=sapply(b[nrow(b):1,][start:end],function(x) min(which(!is.na(x))))
-          if(any(cond>half)) {
+          cond=sapply(b[nrow(b):1,][start:end],function(x) ifelse(all(is.na(x)),Inf,min(which(!is.na(x)))))
+          if(any(cond>half)&!any(is.infinite(cond))) {
             b=b[1:(nrow(b)-max(cond)+half),]
           }
+          if(any(is.infinite(cond))) {
+            b=NULL
+          }
         }
-        vec=b[,start:end][b[,start:end]<Inf]
-        id=data.table::rleid(vec)
-        runid=data.table::rowid(id)
-        DT=data.table::data.table(runid=runid,by=id)
-        vec[DT$runid<=half]=0
-        runidrev=data.table::setorder(DT,by,-runid)$runid
-        vec[runidrev<=half]=0
-        b[,start:end]=vec
-        b$i=i
-        dflist[[i]]=b
+        if(!is.null(b)) {
+          vec=b[,start:end][b[,start:end]<Inf]
+          id=data.table::rleid(vec)
+          runid=data.table::rowid(id)
+          DT=data.table::data.table(runid=runid,by=id)
+          vec[DT$runid<=half]=0
+          runidrev=data.table::setorder(DT,by,-runid)$runid
+          vec[runidrev<=half]=0
+          b[,start:end]=vec
+          b$i=i
+          dflist[[i]]=b
+        }
       }
       c=do.call(rbind,dflist)
     }
-    d=transform(data,full=ifelse(complete.cases(subset(c,!is.na(Date))[start:end]),1,0),check.names=FALSE)
   } else {
     if(group>=start&group<=end) {
       stop('Please move the column group to before start or after end')
@@ -474,26 +492,34 @@ obsedele=function(data,start=NULL,end=NULL,group=NULL,by="min",half=30,cores=NUL
           a=data[data[,group]==i,]
           b=merge(a,data.frame(date=seq(min(a$date),max(a$date),by=by)),all.y=TRUE)
           if(any(is.na(b[1,start:end]))) {
-            cond=sapply(b[start:end],function(x) min(which(!is.na(x))))
-            if(any(cond>half)) {
-              b=b[(1+max(cond)-half):nrow(b),]
+            cond=sapply(b[start:end],function(x) ifelse(all(is.na(x)),Inf,min(which(!is.na(x)))))
+            if(any(cond>half)&!any(is.infinite(cond))) {
+              b=b[(max(cond)-half):nrow(b),]
+            }
+            if(any(is.infinite(cond))) {
+              b=NULL
             }
           }
           if(any(is.na(b[nrow(b),start:end]))) {
-            cond=sapply(b[nrow(b):1,][start:end],function(x) min(which(!is.na(x))))
-            if(any(cond>half)) {
+            cond=sapply(b[nrow(b):1,][start:end],function(x) ifelse(all(is.na(x)),Inf,min(which(!is.na(x)))))
+            if(any(cond>half)&!any(is.infinite(cond))) {
               b=b[1:(nrow(b)-max(cond)+half),]
             }
+            if(any(is.infinite(cond))) {
+              b=NULL
+            }
           }
-          vec=b[,start:end][b[,start:end]<Inf]
-          id=data.table::rleid(vec)
-          runid=data.table::rowid(id)
-          DT=data.table::data.table(runid=runid,by=id)
-          vec[DT$runid<=half]=0
-          runidrev=data.table::setorder(DT,by,-runid)$runid
-          vec[runidrev<=half]=0
-          b[,start:end]=vec
-          b
+          if(!is.null(b)) {
+            vec=b[,start:end][b[,start:end]<Inf]
+            id=data.table::rleid(vec)
+            runid=data.table::rowid(id)
+            DT=data.table::data.table(runid=runid,by=id)
+            vec[DT$runid<=half]=0
+            runidrev=data.table::setorder(DT,by,-runid)$runid
+            vec[runidrev<=half]=0
+            b[,start:end]=vec
+            b
+          }
         }
         parallel::stopCluster(cl)
       } else {
@@ -502,27 +528,35 @@ obsedele=function(data,start=NULL,end=NULL,group=NULL,by="min",half=30,cores=NUL
           a=data[data[,group]==i,]
           b=merge(a,data.frame(date=seq(min(a$date),max(a$date),by=by)),all.y=TRUE)
           if(any(is.na(b[1,start:end]))) {
-            cond=sapply(b[start:end],function(x) min(which(!is.na(x))))
-            if(any(cond>half)) {
-              b=b[(1+max(cond)-half):nrow(b),]
+            cond=sapply(b[start:end],function(x) ifelse(all(is.na(x)),Inf,min(which(!is.na(x)))))
+            if(any(cond>half)&!any(is.infinite(cond))) {
+              b=b[(max(cond)-half):nrow(b),]
+            }
+            if(any(is.infinite(cond))) {
+              b=NULL
             }
           }
           if(any(is.na(b[nrow(b),start:end]))) {
-            cond=sapply(b[nrow(b):1,][start:end],function(x) min(which(!is.na(x))))
-            if(any(cond>half)) {
+            cond=sapply(b[nrow(b):1,][start:end],function(x) ifelse(all(is.na(x)),Inf,min(which(!is.na(x)))))
+            if(any(cond>half)&!any(is.infinite(cond))) {
               b=b[1:(nrow(b)-max(cond)+half),]
             }
+            if(any(is.infinite(cond))) {
+              b=NULL
+            }
           }
-          vec=b[,start:end][b[,start:end]<Inf]
-          id=data.table::rleid(vec)
-          runid=data.table::rowid(id)
-          DT=data.table::data.table(runid=runid,by=id)
-          vec[DT$runid<=half]=0
-          runidrev=data.table::setorder(DT,by,-runid)$runid
-          vec[runidrev<=half]=0
-          b[,start:end]=vec
-          b$i=i
-          dflist[[i]]=b
+          if(!is.null(b)) {
+            vec=b[,start:end][b[,start:end]<Inf]
+            id=data.table::rleid(vec)
+            runid=data.table::rowid(id)
+            DT=data.table::data.table(runid=runid,by=id)
+            vec[DT$runid<=half]=0
+            runidrev=data.table::setorder(DT,by,-runid)$runid
+            vec[runidrev<=half]=0
+            b[,start:end]=vec
+            b$i=i
+            dflist[[i]]=b
+          }
         }
         c=do.call(rbind,dflist)
       }
@@ -534,7 +568,7 @@ obsedele=function(data,start=NULL,end=NULL,group=NULL,by="min",half=30,cores=NUL
   g=subset(df,date%in%f$date)
   rownames(g)=NULL
   cat(paste0(nrow(df)-nrow(g),' observations are deleted'),'\n')
-  cat(paste0('Time used by obsdel: ',format(Sys.time()-t0,digits=3)),'\n')
+  cat(paste0('Time used by obsedele: ',format(Sys.time()-t0,digits=3)),'\n')
   g
 }
 
@@ -582,7 +616,7 @@ condextr=function(data,start=NULL,end=NULL,group=NULL,top=.995,top.error=.1,top.
   a=obsedele(a,start=start,end=end,group=group,by=by,half=half,cores=cores)
   rownames(a)=NULL
   cat(paste0(sum(is.na(a[start:end]))-sum(is.na(data[data$date%in%a$date,start:end])),' values are regarded as outliers and deleted excluding those in deleted observations'),'\n')
-  cat(paste0(nrow(data)-nrow(a),' observations are deleted in total'),'\n')
+  cat(paste0(nrow(data)-nrow(a),' observations are deleted in total by condextr'),'\n')
   cat(paste0('Time used by condextr: ',format(Sys.time()-t0,digits=3)),'\n')
   a
 }
@@ -608,7 +642,7 @@ percoutl=function(data,start=NULL,end=NULL,group=NULL,top=.995,bottom=.0025,by='
   }
   a=obsedele(a,start=start,end=end,group=group,by=by,half=half,cores=cores)
   cat(paste0(sum(is.na(a[start:end]))-sum(is.na(data[data$date%in%a$date,start:end])),' values are regarded as outliers and deleted excluding those in deleted observations'),'\n')
-  cat(paste0(nrow(data)-nrow(a),' observations are deleted in total'),'\n')
+  cat(paste0(nrow(data)-nrow(a),' observations are deleted in total by percoutl'),'\n')
   cat(paste0('Time used by percoutl: ',format(Sys.time()-t0,digits=3)),'\n')
   a
 }
@@ -653,9 +687,9 @@ optisolu=function(data,start=NULL,end=NULL,group=NULL,interval=35,times=10,top=.
   c
 }
 
-shorvalu=function(data,start,end,intervals=30) {
+shorvalu=function(data,start,end,intervals=30,units='mins') {
   t0=Sys.time()
-  a=transform(data,period=cumsum(ifelse(c(0,as.numeric(diff(date),units='mins'))>intervals|c(0,as.numeric(diff(date),units='mins'))==0,1,0)),check.names=FALSE)
+  a=transform(data,period=cumsum(ifelse(c(0,as.numeric(diff(date),units=units))>intervals|c(0,as.numeric(diff(date),units=units))==0,1,0)),check.names=FALSE)
   if(length(find.package(c('dplyr','zoo'),quiet=TRUE))==2) {
     b=dplyr::mutate_at(dplyr::group_by(a,period),start:end,function(x) zoo::na.approx(x,rule=2))
     c=data.frame(b,check.names=FALSE)[1:end]

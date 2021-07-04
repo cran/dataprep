@@ -1,12 +1,12 @@
-a45072371cefb6ac245ff5ea8389307c *DESCRIPTION
+8040fd5c92334f3c269c0e9a17023405 *DESCRIPTION
 e20dbd5d84cdbaa7acf6e4914ab699bb *NAMESPACE
 4f0df6bd9467da6e0c388e3052f39e56 *R/data.R
-9864dfa26aeaf8136018ac8172c85362 *R/function.R
+1e04deecfe4868eb748bc90fca555a85 *R/function.R
 870b59e9413a5d6f6fb4e8ed1a50241f *R/globals.R
-924febb4313d62c7e0590125be6ed218 *build/vignette.rds
+1d4e21a49f8556cecd607297ec7c3857 *build/vignette.rds
 cce85176ebff9e6b842387045ab7e976 *inst/doc/vignettes.R
 8d0054f58dd7628c6cb8282cb595751c *inst/doc/vignettes.Rmd
-444c1a69e51fd89e9ba954755614afd2 *inst/doc/vignettes.html
+026fad1c245dc502c40fc5951e1f987c *inst/doc/vignettes.html
 b41a27ae8515d8e752ffaef738f3a8bd *inst/extdata/data.rds
 42185a4399ba5cb7941928bd458ff7ab *man/condextr.Rd
 f5a0a2735c02562d32e0760ddd17455f *man/data.Rd
@@ -20,7 +20,7 @@ b7d12c85c6a30ea1968fdf385a172ce2 *man/descplot.Rd
 a99bdee5554265295aacce3f05c83e84 *man/percdata.Rd
 a082e845d54d3f1a155f1aa0c7b9406e *man/percoutl.Rd
 ce164d4252229665ceed4e138eb22017 *man/percplot.Rd
-52be98ae75ceb503bc8ffcbd0c8cfb23 *man/shorvalu.Rd
+969e308ca684416481c9d68ffe61da4b *man/shorvalu.Rd
 50db08003b15952f6eb64e62fdfb481e *man/varidele.Rd
 05fcecb856c51d671c62c4f503b79b36 *man/zerona.Rd
 8d0054f58dd7628c6cb8282cb595751c *vignettes/vignettes.Rmd

@@ -7,7 +7,7 @@ Interpolation with values to refer to within short periods
 Time gaps and available values are considered in NA interpolation by \code{shorvalu}. Thus, more reliable interpolation is realized with these constraints and the successive using of \code{obsedele} in the preceding outlier removal.
 }
 \usage{
-shorvalu(data, start, end, intervals = 30)
+shorvalu(data, start, end, intervals = 30, units = 'mins')
 }
 \arguments{
   \item{data}{
@@ -21,6 +21,9 @@ shorvalu(data, start, end, intervals = 30)
 }
   \item{intervals}{
   The time gap of dividing periods as groups, is 30 (minutes) by default. This confines the interpolation inside short periods so that each interpolation has observed value(s) to refer to within every half an hour.
+}
+  \item{units}{
+  Units in time intervals/differences. It can be one of "secs", "mins", "hours", "days", or "weeks". The default is 'mins'.
 }
 }
 \details{
