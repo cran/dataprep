@@ -252,7 +252,7 @@ percplot=function(data,start=NULL,end=NULL,group=NULL,ncol=NULL,diff=.1,part='bo
             ggplot2::scale_x_log10(sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))+
             ggplot2::guides(colour=ggplot2::guide_legend(title=paste0("n:",nrow(data),"\nna:",sum(is.na(data)),"\n\nPercentiles"),reverse=TRUE,override.aes=list(size=1)))+
             ggplot2::facet_wrap(facets=names(data[group]),ncol=ncol)+
-            ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1)),
+            ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1,na.rm=TRUE)),
                                             label=paste0("n=",n)),setNames(aggregate(1:nrow(data),list(data[,group]),length),c(names(data[group]),'n')),inherit.aes=FALSE)
           if(part%in%c('both',2)) {
             plot=plot+ggplot2::scale_y_log10(labels=scales::trans_format("log10",scales::math_format(10^.x)),sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))
@@ -268,7 +268,7 @@ percplot=function(data,start=NULL,end=NULL,group=NULL,ncol=NULL,diff=.1,part='bo
               ggplot2::scale_y_continuous(sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))+
               ggplot2::guides(colour=ggplot2::guide_legend(title=paste0("n:",nrow(data),"\nna:",sum(is.na(data)),"\n\nPercentiles"),reverse=TRUE,override.aes=list(size=1)))+
               ggplot2::facet_wrap(facets=names(data[group]),ncol=ncol)+
-              ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1)),
+              ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1,na.rm=TRUE)),
                                               label=paste0("n=",n)),setNames(aggregate(1:nrow(data),list(data[,group]),length),c(names(data[group]),'n')),inherit.aes=FALSE)
           } else {
             if(length(unique(signif(diff(log(as.numeric(as.character(names(data[,start:end]))))),2)))>=(end-start+1)/10&
@@ -278,7 +278,7 @@ percplot=function(data,start=NULL,end=NULL,group=NULL,ncol=NULL,diff=.1,part='bo
                 ggplot2::scale_x_continuous(sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))+
                 ggplot2::guides(colour=ggplot2::guide_legend(title=paste0("n:",nrow(data),"\nna:",sum(is.na(data)),"\n\nPercentiles"),reverse=TRUE,override.aes=list(size=1)))+
                 ggplot2::facet_wrap(facets=names(data[group]),ncol=ncol)+
-                ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1)),
+                ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1,na.rm=TRUE)),
                                                 label=paste0("n=",n)),setNames(aggregate(1:nrow(data),list(data[,group]),length),c(names(data[group]),'n')),inherit.aes=FALSE)
               if(part%in%c('both',2)) {
                 plot=plot+ggplot2::scale_y_log10(labels=scales::trans_format("log10",scales::math_format(10^.x)),sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))
@@ -292,7 +292,7 @@ percplot=function(data,start=NULL,end=NULL,group=NULL,ncol=NULL,diff=.1,part='bo
                 ggplot2::scale_y_continuous(sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))+
                 ggplot2::guides(colour=ggplot2::guide_legend(title=paste0("n:",nrow(data),"\nna:",sum(is.na(data)),"\n\nPercentiles"),reverse=TRUE,override.aes=list(size=1)))+
                 ggplot2::facet_wrap(facets=names(data[group]),ncol=ncol)+
-                ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1)),
+                ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1,na.rm=TRUE)),
                                                 label=paste0("n=",n)),setNames(aggregate(1:nrow(data),list(data[,group]),length),c(names(data[group]),'n')),inherit.aes=FALSE)
             }
           }
@@ -305,7 +305,7 @@ percplot=function(data,start=NULL,end=NULL,group=NULL,ncol=NULL,diff=.1,part='bo
             ggplot2::scale_x_log10(sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))+
             ggplot2::guides(colour=ggplot2::guide_legend(title=paste0("n:",nrow(data),"\nna:",sum(is.na(data)),"\n\nPercentiles"),reverse=TRUE,override.aes=list(size=1)))+
             ggplot2::facet_wrap(facets=names(data[group]),ncol=ncol)+
-            ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1)),
+            ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1,na.rm=TRUE)),
                                             label=paste0("n=",n)),setNames(aggregate(1:nrow(data),list(data[,group]),length),c(names(data[group]),'n')),inherit.aes=FALSE)
           if(part%in%c('both',2)) {
             plot=plot+ggplot2::scale_y_log10(labels=scales::trans_format("log10",scales::math_format(10^.x)),sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))
@@ -321,7 +321,7 @@ percplot=function(data,start=NULL,end=NULL,group=NULL,ncol=NULL,diff=.1,part='bo
               ggplot2::scale_y_continuous(sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))+
               ggplot2::guides(colour=ggplot2::guide_legend(title=paste0("n:",nrow(data),"\nna:",sum(is.na(data)),"\n\nPercentiles"),reverse=TRUE,override.aes=list(size=1)))+
               ggplot2::facet_wrap(facets=names(data[group]),ncol=ncol)+
-              ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1)),
+              ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1,na.rm=TRUE)),
                                               label=paste0("n=",n)),setNames(aggregate(1:nrow(data),list(data[,group]),length),c(names(data[group]),'n')),inherit.aes=FALSE)
           } else {
             if(length(unique(signif(diff(log(as.numeric(as.character(names(data[,start:end]))))),2)))>=(end-start+1)/10&
@@ -331,7 +331,7 @@ percplot=function(data,start=NULL,end=NULL,group=NULL,ncol=NULL,diff=.1,part='bo
                 ggplot2::scale_x_continuous(sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))+
                 ggplot2::guides(colour=ggplot2::guide_legend(title=paste0("n:",nrow(data),"\nna:",sum(is.na(data)),"\n\nPercentiles"),reverse=TRUE,override.aes=list(size=1)))+
                 ggplot2::facet_wrap(facets=names(data[group]),ncol=ncol)+
-                ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1)),
+                ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1,na.rm=TRUE)),
                                                 label=paste0("n=",n)),setNames(aggregate(1:nrow(data),list(data[,group]),length),c(names(data[group]),'n')),inherit.aes=FALSE)
               if(part%in%c('both',2)) {
                 plot=plot+ggplot2::scale_y_log10(labels=scales::trans_format("log10",scales::math_format(10^.x)),sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))
@@ -345,7 +345,7 @@ percplot=function(data,start=NULL,end=NULL,group=NULL,ncol=NULL,diff=.1,part='bo
                 ggplot2::scale_y_continuous(sec.axis=ggplot2::dup_axis(name=NULL,labels=NULL))+
                 ggplot2::guides(colour=ggplot2::guide_legend(title=paste0("n:",nrow(data),"\nna:",sum(is.na(data)),"\n\nPercentiles"),reverse=TRUE,override.aes=list(size=1)))+
                 ggplot2::facet_wrap(facets=names(data[group]),ncol=ncol)+
-                ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1)),
+                ggplot2::geom_text(ggplot2::aes(median(as.numeric(names(data[,start:end])),na.rm=TRUE),10^(quantile(log10(range(zerona(data[,start:end]),na.rm=TRUE)),.1,na.rm=TRUE)),
                                                 label=paste0("n=",n)),setNames(aggregate(1:nrow(data),list(data[,group]),length),c(names(data[group]),'n')),inherit.aes=FALSE)
             }
           }
@@ -649,7 +649,7 @@ percoutl=function(data,start=NULL,end=NULL,group=NULL,top=.995,bottom=.0025,by='
 
 optisolu=function(data,start=NULL,end=NULL,group=NULL,interval=35,times=10,top=.995,top.error=.1,top.magnitude=.2,bottom=.0025,bottom.error=.2,bottom.magnitude=.4,by='min',half=30,cores=NULL) {
   t0=Sys.time()
-  if(length(find.package(c('foreach','doParallel','parallel'),quiet=TRUE))==3&as.numeric(object.size(data))/1024/1024>10) {
+  if(length(find.package(c('foreach','doParallel','parallel'),quiet=TRUE))==3&as.numeric(object.size(data))/1024/1024>1) {
     cores=ifelse(is.null(cores),parallel::detectCores(),cores)
     cl=parallel::makeCluster(cores)
     doParallel::registerDoParallel(cl)

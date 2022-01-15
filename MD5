@@ -1,12 +1,12 @@
-8040fd5c92334f3c269c0e9a17023405 *DESCRIPTION
+8e8a0a4a78ff156b8ec0379ba890465a *DESCRIPTION
 e20dbd5d84cdbaa7acf6e4914ab699bb *NAMESPACE
 4f0df6bd9467da6e0c388e3052f39e56 *R/data.R
-1e04deecfe4868eb748bc90fca555a85 *R/function.R
+293987ac1f4f01711aacaaa161aa32b8 *R/function.R
 870b59e9413a5d6f6fb4e8ed1a50241f *R/globals.R
-1d4e21a49f8556cecd607297ec7c3857 *build/vignette.rds
+6475dfbcd56b9053f439a8549add5300 *build/vignette.rds
 cce85176ebff9e6b842387045ab7e976 *inst/doc/vignettes.R
 8d0054f58dd7628c6cb8282cb595751c *inst/doc/vignettes.Rmd
-026fad1c245dc502c40fc5951e1f987c *inst/doc/vignettes.html
+14dbaa00c8f7f859237607c664e2c0ea *inst/doc/vignettes.html
 b41a27ae8515d8e752ffaef738f3a8bd *inst/extdata/data.rds
 42185a4399ba5cb7941928bd458ff7ab *man/condextr.Rd
 f5a0a2735c02562d32e0760ddd17455f *man/data.Rd
@@ -15,7 +15,7 @@ afc4f7d649653528b4621171c6b9b285 *man/data1.Rd
 b966420fcec93ec388d7d17c8d714bf8 *man/descdata.Rd
 b7d12c85c6a30ea1968fdf385a172ce2 *man/descplot.Rd
 2166ec72a24fd1036d000a4dd61e2059 *man/melt.Rd
-93a15459cd402d951b9e1d2cdccb9d1f *man/obsedele.Rd
+b18d1a55197e6de10736e59832ee7d11 *man/obsedele.Rd
 7cf548ae5876e56196600fdef503b6cd *man/optisolu.Rd
 a99bdee5554265295aacce3f05c83e84 *man/percdata.Rd
 a082e845d54d3f1a155f1aa0c7b9406e *man/percoutl.Rd

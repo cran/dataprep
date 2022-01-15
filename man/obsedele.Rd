@@ -59,7 +59,8 @@ Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
 # This selection ignores the first 22 and the last 4 variables
 # Not show the first 22 variables dropped by varidele
 # A total of 39 variables left (65 - 22 - 4)
-# Here, only 2 cores are used for saving time.
+# Here, a smaller example is used for saving time.
+# Besides, only 2 cores are used for submission test.
 \donttest{
 obsedele(data[c(1:200,3255:3454),c(1:4,27:61)],5,39,4,cores=2)
 }
