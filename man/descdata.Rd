@@ -4,67 +4,45 @@
 Fast descriptive statistics
 }
 \description{
-It describes data using R basic functions, without calling other packages to avoid redundant calculations, which is faster.
+Computes descriptive statistics for selected numeric columns using
+efficient C++ routines.
 }
 \usage{
-descdata(data, start = NULL, end = NULL, stats= 1:9, first = "variables")
+descdata(data, cols = NULL, stats = 1:9, first = "variables",
+         cores = NULL, verbose = FALSE)
 }
 \arguments{
-  \item{data}{
-  A data frame to describe, from the column \code{start} to the column \code{end}.
-}
-  \item{start}{
-  The column number of the first variable to describe.
-}
-  \item{end}{
-  The column number of the last variable to describe.
-}
-  \item{stats}{
-  Selecting or rearranging the items from the 9 statistics, i.e., n, na, mean, sd, median, trimmed, min, max, and IQR. It can be a vector or a single value, in 'character' or 'numeric' class.
-}
-  \item{first}{
-  The name of the first column of the output. It is the general name of the items (variables).
-}
+  \item{data}{A data frame, matrix, or numeric vector. If a vector is
+    supplied, it is treated as a single variable and the output's
+    first column is named \code{"value"}.}
+  \item{cols}{Column indices or names of numeric variables to describe.
+    If \code{NULL}, all numeric columns are used.}
+  \item{stats}{Statistic selection from the nine available:
+    \code{n}, \code{na}, \code{mean}, \code{sd}, \code{median},
+    \code{trimmed}, \code{min}, \code{max}, \code{IQR}. Can be a
+    numeric vector or a character vector of statistic names.}
+  \item{first}{Name for the first column of the output, which contains
+    the variable identifiers.}
+  \item{cores}{Number of CPU cores. \code{NULL} (default) means single-threaded execution; pass an integer > 0 to enable OpenMP when \code{nrow(x) * ncol(x) > 1e5}.}
+  \item{verbose}{Logical; if \code{TRUE}, prints timing message.}
 }
 \details{
-This function can be used for different types of data, as long as the variables are numeric. Because it describes the data frame from the column \code{start} to the column \code{end}, the variables need to be linked together instead of being scattered.
+The function accepts vectors, matrices, and data frames. Numeric
+columns are required. The calculation is performed entirely in C++
+via Rcpp for speed.
 }
 \value{
-A data frame of descriptive statistics:
-\item{size}{default general name of items (variables). Users can define it via the parameter first.}
-\item{n}{number of valid cases}
-\item{na}{number of invalid cases}
-\item{mean}{mean of each item}
-\item{sd}{standard deviation}
-\item{median}{median of each item}
-\item{trimmed}{trimmed mean (with trim defaulting to .1)}
-\item{min}{minimum of each item}
-\item{max}{maximum of each item}
-\item{IQR}{interquartile range of each item}
+A data frame with descriptive statistics for each variable.
 }
 \references{
-1. Example data is from https://smear.avaa.csc.fi/download. It includes particle number concentrations in SMEAR I Varrio forest.
+1. Example data is from \url{https://smear.avaa.csc.fi/download}.
+   It includes particle number concentrations in SMEAR I Varrio forest.
 }
 \author{
-Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
-}
-
-\seealso{
-\code{dataprep::descplot}
+Chun-Sheng Liang <chun-shengliang@qq.com>
 }
 \examples{
-# Variable names are essentially numeric
-descdata(data,5,65)
-# Use numbers to select statistics
-descdata(data,5,65,c(2,7:9))
-# Use characters to select statistics
-descdata(data,5,65,c('na','min','max','IQR'))
-
-# When type of variable names is character
-descdata(data1,3,7)
-# Use numbers to select statistics
-descdata(data1,3,7,c(2,7:9))
-# Use characters to select statistics
-descdata(data1,3,7,c('na','min','max','IQR'))
+descdata(data, cols = 5:65)
+descdata(data, cols = 5:65, stats = c(2, 7:9))
+descdata(data, cols = 5:65, stats = c("na", "min", "max", "IQR"))
 }
-

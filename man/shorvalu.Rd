@@ -4,51 +4,32 @@
 Interpolation with values to refer to within short periods
 }
 \description{
-Time gaps and available values are considered in NA interpolation by \code{shorvalu}. Thus, more reliable interpolation is realized with these constraints and the successive using of \code{obsedele} in the preceding outlier removal.
+Performs linear interpolation of missing values within short time segments, constrained by the availability of observed values in the same segment. This method ensures that interpolation is based on nearby valid data.
 }
 \usage{
-shorvalu(data, start, end, intervals = 30, units = 'mins')
+shorvalu(data, cols = NULL, intervals = 30, units = "mins",
+         date_col = NULL, cores = NULL, verbose = FALSE)
 }
 \arguments{
-  \item{data}{
-  A data frame containing outliers. Its columns from \code{start} to \code{end} will be checked.
-}
-  \item{start}{
-  The column number of the first selected variable.
-}
-  \item{end}{
-  The column number of the last selected variable.
-}
-  \item{intervals}{
-  The time gap of dividing periods as groups, is 30 (minutes) by default. This confines the interpolation inside short periods so that each interpolation has observed value(s) to refer to within every half an hour.
-}
-  \item{units}{
-  Units in time intervals/differences. It can be one of "secs", "mins", "hours", "days", or "weeks". The default is 'mins'.
-}
-}
-\details{
-It offers a robust interpolation method based on considering time gaps and available values.
+  \item{data}{A data frame, matrix, or numeric vector. If a vector, simple linear interpolation is applied.}
+  \item{cols}{Column indices or names of numeric variables to interpolate. Must be continuous.}
+  \item{intervals}{Time gap used to define short periods.}
+  \item{units}{Time unit for \code{intervals}: "secs", "mins", "hours", "days", "weeks".}
+  \item{date_col}{Time column index or name. If \code{NULL}, automatically detected.}
+  \item{cores}{Number of CPU cores for parallel computation (passed to C++).}
+  \item{verbose}{Logical; if \code{TRUE}, prints timing and interpolation counts.}
 }
 \value{
-A data frame with missing values being replaced linearly within short periods and with values to refer to.
+A data frame with missing values filled by linear interpolation within each period.
 }
 \references{
-1. Example data is from https://smear.avaa.csc.fi/download. It includes particle number concentrations in SMEAR I Varrio forest.
-
-2. Wickham, H., Francois, R., Henry, L. & Muller, K. 2017. dplyr: A Grammar of Data Manipulation. 0.7.4 ed. http://dplyr.tidyverse.org, https://github.com/tidyverse/dplyr.
-
-3. Wickham, H., Francois, R., Henry, L. & Muller, K. 2019. dplyr: A Grammar of Data Manipulation. R package version 0.8.3. https://CRAN.R-project.org/package=dplyr.
-
-4. Zeileis, A. & Grothendieck, G. 2005. zoo: S3 infrastructure for regular and irregular time series. Journal of Statistical Software, 14(6):1-27.
-
-5. Zeileis, A., Grothendieck, G. & Ryan, J.A. 2019. zoo: S3 Infrastructure for Regular and Irregular Time Series (Z's Ordered Observations). R package version 1.8-6. https://cran.r-project.org/web/packages/zoo/.
+1. Example data is from \url{https://smear.avaa.csc.fi/download}. It includes particle number concentrations in SMEAR I Varrio forest.
 }
 \author{
-Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
+Chun-Sheng Liang <chun-shengliang@qq.com>
 }
-
 \examples{
-shorvalu(condextr(obsedele(data[1:250,c(1,4,17:19)],3,5,2,cores=2),
-3,5,2,cores=2),3,5)
+shorvalu(condextr(obsedele(data[1:250, c(1, 4, 17:19)], cols = 3:5, group = 2),
+                  cols = 3:5, group = 2),
+         cols = 3:5)
 }
-

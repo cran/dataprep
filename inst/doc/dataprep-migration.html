@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>dataprep: upgrading from 0.1.5 to 0.1.8</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">dataprep: upgrading from 0.1.5 to
+0.1.8</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(dataprep)</span></code></pre></div>
+<div id="what-changed" class="section level2">
+<h2>What changed</h2>
+<p>Three behaviour changes affect row and column counts. All three are
+bug fixes, but each one changes the output on real data. If your
+downstream analysis depends on exact row counts, read the quantified
+comparison in the last section before upgrading.</p>
+</div>
+<div id="interface-changes" class="section level2">
+<h2>Interface changes</h2>
+<p>Besides the behaviour changes above, several functions changed their
+argument interface between 0.1.5 and 0.1.8. The old <code>start</code> /
+<code>end</code> pair was replaced by a single <code>cols</code>
+argument (character names, integer indices, or logical mask):</p>
+<table>
+<thead>
+<tr class="header">
+<th>Function</th>
+<th>0.1.5 arguments</th>
+<th>0.1.8 arguments</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>varidele</code></td>
+<td><code>start</code>, <code>end</code></td>
+<td><code>cols</code></td>
+</tr>
+<tr class="even">
+<td><code>obsedele</code></td>
+<td><code>start</code>, <code>end</code></td>
+<td><code>cols</code></td>
+</tr>
+<tr class="odd">
+<td><code>condextr</code></td>
+<td><code>start</code>, <code>end</code></td>
+<td><code>cols</code></td>
+</tr>
+<tr class="even">
+<td><code>percoutl</code></td>
+<td><code>start</code>, <code>end</code></td>
+<td><code>cols</code></td>
+</tr>
+<tr class="odd">
+<td><code>optisolu</code></td>
+<td><code>start</code>, <code>end</code></td>
+<td><code>cols</code></td>
+</tr>
+<tr class="even">
+<td><code>dataprep</code></td>
+<td><code>start</code>, <code>end</code></td>
+<td><code>cols</code></td>
+</tr>
+<tr class="odd">
+<td><code>descdata</code></td>
+<td><code>start</code>, <code>end</code></td>
+<td><code>cols</code></td>
+</tr>
+<tr class="even">
+<td><code>descplot</code></td>
+<td><code>start</code>, <code>end</code></td>
+<td><code>cols</code></td>
+</tr>
+<tr class="odd">
+<td><code>percdata</code></td>
+<td><code>start</code>, <code>end</code></td>
+<td><code>cols</code></td>
+</tr>
+<tr class="even">
+<td><code>percplot</code></td>
+<td><code>start</code>, <code>end</code></td>
+<td><code>cols</code></td>
+</tr>
+<tr class="odd">
+<td><code>shorvalu</code></td>
+<td><code>start</code>, <code>end</code></td>
+<td><code>cols</code></td>
+</tr>
+<tr class="even">
+<td><code>melt</code></td>
+<td><code>cols</code> (id columns)</td>
+<td><code>id</code> / <code>measure.vars</code></td>
+</tr>
+</tbody>
+</table>
+<p>A call such as <code>varidele(data, 3, 15)</code> was interpreted as
+<code>start = 3, end = 15</code> in 0.1.5, but in 0.1.8 it is parsed as
+<code>cols = 3</code> (the <code>15</code> is dropped or becomes
+<code>fraction</code>). You must rewrite it as
+<code>varidele(data, cols = 3:15)</code>. The same applies to every
+function in the table.</p>
+<ul>
+<li><p><code>obsedele()</code> <strong>now scans each column
+independently.</strong> The 0.1.5 implementation collapsed all selected
+columns into one long vector before computing missing runs; this changed
+<code>NA</code> run boundaries and could both over-delete boundary rows
+and retain rows that should have been deleted. The 0.1.8 implementation
+scans each column independently: a row is deleted when <em>any</em>
+selected column has a missing run longer than <code>half</code> minutes
+on both sides.</p></li>
+<li><p><strong><code>half</code> is now always in minutes, and the
+boundary is inclusive.</strong> In 0.1.5, <code>half</code> counted grid
+rows in units of <code>by</code>: with
+<code>by = &quot;5 min&quot;, half = 30</code> the effective window was 150
+minutes. In 0.1.8, <code>half</code> is always in minutes, independent
+of <code>by</code>. Rows whose nearest anchor is exactly
+<code>half</code> minutes away are retained (“within <code>half</code>
+minutes” is a <code>&lt;=</code> condition).</p></li>
+<li><p><code>optisolu()</code> <strong>no longer crashes with
+<code>cores &gt; 16</code>.</strong> The 0.1.5
+<code>parallel::makeCluster()</code> path exhausted memory when the
+worker processes each received a full copy of the input. The 0.1.8
+implementation loads the package on each worker, exports the input data
+only once per worker, and runs each <code>(interval, times)</code> case
+in a separate task, so <code>cores = 64</code> and
+<code>cores = NULL</code> (automatic) are both safe. Note that the
+optimal parameter values returned by <code>optisolu()</code> may differ
+slightly between 0.1.5 and 0.1.8 because the underlying outlier-marking
+and observation-deletion backends have changed. Re-run
+<code>optisolu()</code> after upgrading if exact parameter values
+matter.</p></li>
+</ul>
+<p>The full description is in <code>news(package = &quot;dataprep&quot;)</code>.
+The design reasoning behind the pipeline is in
+<code>vignette(&quot;dataprep-philosophy&quot;)</code>.</p>
+</div>
+<div id="minimal-reproduction-of-the-boundary-change" class="section level2">
+<h2>Minimal reproduction of the boundary change</h2>
+<p>Consider five observations sampled every 10 minutes, with a valid
+value only at the two ends:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="at">date =</span> <span class="fu">as.POSIXct</span>(<span class="st">&quot;2024-01-01 00:00:00&quot;</span>, <span class="at">tz =</span> <span class="st">&quot;UTC&quot;</span>) <span class="sc">+</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">4</span> <span class="sc">*</span> <span class="dv">600</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">x    =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="dv">5</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>)</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">obsedele</span>(df, <span class="at">cols =</span> <span class="st">&quot;x&quot;</span>, <span class="at">half =</span> <span class="dv">30</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;                  date  x</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt; 1 2024-01-01 00:00:00  1</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; 2 2024-01-01 00:10:00 NA</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; 3 2024-01-01 00:20:00 NA</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; 4 2024-01-01 00:30:00 NA</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt; 5 2024-01-01 00:40:00  5</span></span></code></pre></div>
+<p>The three interior rows are each 10, 20, or 30 minutes from the
+nearest valid anchor. Under 0.1.5 the third row was deleted because the
+delete condition was inclusive (<code>dl &gt;= half</code>); under 0.1.8
+it is retained because the delete condition is strict
+(<code>dl &gt; half &amp;&amp; dr &gt; half</code>), so
+<code>dl == half</code> satisfies “within <code>half</code>
+minutes”.</p>
+</div>
+<div id="minimal-reproduction-of-the-multi-column-change" class="section level2">
+<h2>Minimal reproduction of the multi-column change</h2>
+<p>Consider two channels with mutually exclusive missing runs:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">date =</span> <span class="fu">as.POSIXct</span>(<span class="st">&quot;2024-01-01 00:00:00&quot;</span>, <span class="at">tz =</span> <span class="st">&quot;UTC&quot;</span>) <span class="sc">+</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">9</span> <span class="sc">*</span> <span class="dv">600</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">x    =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="dv">5</span>),</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">y    =</span> <span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="dv">2</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="fu">nrow</span>(<span class="fu">obsedele</span>(df, <span class="at">cols =</span> <span class="fu">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;y&quot;</span>), <span class="at">half =</span> <span class="dv">60</span>))</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; [1] 10</span></span></code></pre></div>
+<p>Under 0.1.5, the <code>x</code> and <code>y</code> <code>NA</code>
+runs were merged before computing the run length. This changed the run
+boundaries and could either over-delete rows or retain rows that should
+have been deleted. Under 0.1.8 the two channels are checked
+independently: a row is deleted when <em>any</em> selected column has a
+run longer than <code>half</code> minutes on both sides.</p>
+</div>
+<div id="implementation-evolution" class="section level2">
+<h2>Implementation evolution</h2>
+<p>The retention criterion has been stable across releases, but the
+implementation has improved steadily. The table below summarises the
+three generations:</p>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Release</th>
+<th>Strategy</th>
+<th>Complexity</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.1.0</td>
+<td>Borrowed running mean: expand the series onto a regular grid with
+<code>tidyr::complete()</code>, compute a 59-minute centred moving
+average on a temporary column, and use its emptiness pattern to flag
+long runs.</td>
+<td><code>O(grid length)</code> per subset</td>
+</tr>
+<tr class="even">
+<td>0.1.5</td>
+<td>Run-length encoding: use <code>data.table::rleid()</code> and
+<code>rowid()</code> to collapse consecutive <code>NA</code>s into runs.
+The retention threshold was <code>half * num</code> grid rows, where
+<code>num</code> is the leading number in the <code>by</code> string:
+with <code>by = &quot;5 min&quot;, half = 30</code> this was a 150-minute
+window.</td>
+<td><code>O(n)</code> time, <code>O(n)</code> temporary storage</td>
+</tr>
+<tr class="odd">
+<td>0.1.8</td>
+<td>Anchor scan: for each missing value, look up the nearest non-missing
+anchor on each side and compare the two time distances directly. No
+grid, no run-length state.</td>
+<td><code>O(n)</code> time, <code>O(1)</code> extra allocation per
+column</td>
+</tr>
+</tbody>
+</table>
+<p>Each generation produces the same deletion decision on the same
+input, but the constant factors shrink. The 0.1.8 anchor scan is the
+first version that is fast enough to run interactively on full-year
+data: on SMEAR I Varrio 2025 (49,422 rows × 61 numeric channels),
+<code>obsedele()</code> now runs in 0.05 s against 11.6 s in 0.1.5 on
+Ubuntu 25.10 (about 232×), and in 0.035 s against 22.5 s on Windows 11
+Pro for Workstations (about 648×). See
+<code>vignette(&quot;dataprep-performance&quot;)</code> for the full
+benchmark.</p>
+</div>
+<div id="quantified-effect-on-a-full-year-dataset" class="section level2">
+<h2>Quantified effect on a full-year dataset</h2>
+<p>On SMEAR I Varrio 2025 (49,422 rows × 61 numeric channels, 10-minute
+sampling), running the same pipeline with the same parameters:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Stage</th>
+<th align="right">0.1.5</th>
+<th align="right">0.1.8</th>
+<th align="right">Δ</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>varidele</code></td>
+<td align="right">25 columns deleted</td>
+<td align="right">25 columns deleted</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td><code>obsedele</code></td>
+<td align="right">1,494 rows deleted</td>
+<td align="right">1,496 rows deleted</td>
+<td align="right">+2</td>
+</tr>
+<tr class="odd">
+<td><code>condextr</code></td>
+<td align="right">1,868 rows deleted</td>
+<td align="right">1,863 rows deleted</td>
+<td align="right">−5</td>
+</tr>
+<tr class="even">
+<td><code>shorvalu</code></td>
+<td align="right">50,376 NAs filled</td>
+<td align="right">50,387 NAs filled</td>
+<td align="right">+11</td>
+</tr>
+<tr class="odd">
+<td><code>dataprep</code> final</td>
+<td align="right">46,060 rows</td>
+<td align="right">46,063 rows</td>
+<td align="right">+3</td>
+</tr>
+</tbody>
+</table>
+<p>Net change: 0.006% of the input. The six rows that differ between
+versions all sit at run boundaries where the anchor distance is within
+one sampling interval of <code>half</code> minutes.</p>
+</div>
+<div id="where-the-difference-comes-from" class="section level2">
+<h2>Where the difference comes from</h2>
+<p>The six differing rows fall into two groups:</p>
+<ul>
+<li><p><strong>Rows kept by 0.1.8, deleted by 0.1.5 (3 rows).</strong>
+These are rows whose nearest anchor is exactly <code>half</code> minutes
+away. Under the 0.1.5 delete condition (<code>dl &gt;= half</code>) they
+were deleted; under the 0.1.8 condition
+(<code>dl &gt; half &amp;&amp; dr &gt; half</code>) they are retained.
+Each of these rows has a valid anchor within one sampling interval of
+<code>half</code>, so retaining them is consistent with the physical
+constraint described in
+<code>vignette(&quot;dataprep-philosophy&quot;)</code>.</p></li>
+<li><p><strong>Rows deleted by 0.1.8, kept by 0.1.5 (3 rows, overlapping
+with the above).</strong> These are rows that pass the check on some
+columns but fail on at least one. Under 0.1.5 the merge-columns approach
+effectively widened the anchor window on these rows; under 0.1.8 each
+column is checked independently, so the row is deleted. These rows would
+have been interpolated across a gap longer than <code>half</code>
+minutes in at least one channel, which contradicts the design.</p></li>
+</ul>
+<p>The net result is 3 additional rows in the final output.</p>
+</div>
+<div id="migration-checklist" class="section level2">
+<h2>Migration checklist</h2>
+<ul class="task-list">
+<li><p><label><input type="checkbox"></input>Re-run any downstream analysis
+that uses the output of <code>obsedele()</code>,
+<code>condextr()</code>, <code>percoutl()</code>, or
+<code>dataprep()</code>. The three-row difference on SMEAR I Varrio 2025
+is representative of the magnitude you should expect on other datasets
+(well under 0.1% of rows).</label></p></li>
+<li><p><label><input type="checkbox"></input>If you use
+<code>prep_fit()</code> / <code>prep_transform()</code>, re-fit the plan
+on the new training data. The stored thresholds are not affected by the
+change, but the row indices that fed into them are.</label></p></li>
+<li><p><label><input type="checkbox"></input>If you were limiting
+<code>optisolu()</code> to <code>cores &lt;= 16</code> as a workaround
+for the 0.1.5 crash, remove the cap. 0.1.8 accepts up to 64. Also re-run
+<code>optisolu()</code> because the returned optimal parameters may
+differ slightly from 0.1.5.</label></p></li>
+<li><p><label><input type="checkbox"></input>If downstream behaviour depends
+on specific boundary rows, verify the difference with
+<code>dplyr::anti_join()</code> between the 0.1.5 and 0.1.8 outputs. The
+example below shows how.</label></p></li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>result_015 <span class="ot">&lt;-</span> dataprep<span class="sc">::</span><span class="fu">dataprep</span>(data, <span class="at">cols =</span> <span class="dv">5</span><span class="sc">:</span><span class="dv">65</span>, <span class="at">group =</span> <span class="dv">4</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>result_017 <span class="ot">&lt;-</span> <span class="fu">dataprep</span>(data, <span class="at">cols =</span> <span class="dv">5</span><span class="sc">:</span><span class="dv">65</span>, <span class="at">group =</span> <span class="dv">4</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>kept_only_by_017 <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">anti_join</span>(result_017, result_015, <span class="at">by =</span> <span class="st">&quot;date&quot;</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>kept_only_by_015 <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">anti_join</span>(result_015, result_017, <span class="at">by =</span> <span class="st">&quot;date&quot;</span>)</span></code></pre></div>
+</div>
+<div id="what-did-not-change" class="section level2">
+<h2>What did not change</h2>
+<p>For users who only call <code>melt()</code> and <code>dcast()</code>,
+or who only use <code>dataprep</code> for descriptive statistics
+(<code>descdata</code>, <code>na_diagnose</code>, <code>percdata</code>,
+<code>percplot</code>, <code>descplot</code>), there is no behaviour
+change. Those functions have been re-implemented in 0.1.8 for speed
+(<code>melt</code> and <code>dcast</code>) or reorganised internally
+(<code>data_report</code>, <code>dry_run</code>), but the output on
+every tested input is identical to 0.1.5 except where noted in the news
+file.</p>
+</div>
+<div id="performance-reference" class="section level2">
+<h2>Performance reference</h2>
+<p>The 0.1.8 release rewrites every heavy cleaning routine in C++. The
+table below compares against 0.1.5 on three dataset sizes from the same
+source (SMEAR I Varrio forest). All numbers are speed-up ratios (0.1.5
+time / 0.1.8 time); a value below 1.0× means 0.1.8 is slightly slower on
+that cell.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Function</th>
+<th align="right">500 rows</th>
+<th align="right">7,640 rows</th>
+<th align="right">49,422 rows (Ubuntu 25.10)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>varidele</code></td>
+<td align="right">1.1×</td>
+<td align="right">1.1×</td>
+<td align="right">11.6×</td>
+</tr>
+<tr class="even">
+<td><code>obsedele</code></td>
+<td align="right">203×</td>
+<td align="right">424×</td>
+<td align="right">232×</td>
+</tr>
+<tr class="odd">
+<td><code>condextr</code></td>
+<td align="right">196×</td>
+<td align="right">217×</td>
+<td align="right">1146×</td>
+</tr>
+<tr class="even">
+<td><code>optisolu</code></td>
+<td align="right">188×</td>
+<td align="right">77×</td>
+<td align="right">109×</td>
+</tr>
+<tr class="odd">
+<td><code>dataprep</code></td>
+<td align="right">185×</td>
+<td align="right">228×</td>
+<td align="right">247×</td>
+</tr>
+</tbody>
+</table>
+<p>On Windows 11 Pro for Workstations, the same full-year pipeline gives
+<code>obsedele</code> ≈ 648×, <code>condextr</code> ≈ 839×,
+<code>shorvalu</code> ≈ 81×, <code>optisolu</code> ≈ 25× (at
+<code>cores = 32</code>), and the integrated <code>dataprep</code> call
+≈ 173×. <code>varidele</code> is around 1.17× on this cell; this is
+expected, since <code>varidele</code> is a single
+<code>colMeans(is.na(.))</code> in both versions and the new code path
+has little room for improvement.</p>
+<blockquote>
+<p><strong>Note on <code>optisolu</code> cores.</strong> The 0.1.5
+implementation could crash when <code>cores &gt; 16</code>. The
+benchmark above used <code>cores = 16</code> for both versions to keep
+the comparison fair. 0.1.8 loads the package on each worker, exports the
+input data once per worker, and runs each <code>(interval, times)</code>
+case as a separate task, so <code>cores = 64</code> is safe. The
+practical speed-up on a many-core host is larger than the table above.
+Also note that the optimal parameter values returned by
+<code>optisolu()</code> may differ slightly between versions; re-run
+<code>optisolu()</code> after upgrading if exact values matter.</p>
+</blockquote>
+</div>
+<div id="test-environments" class="section level2">
+<h2>Test environments</h2>
+<p>Benchmarks and checks were run on two reference hosts. Only the core
+configuration is listed here; full details are in
+<code>vignette(&quot;dataprep-performance&quot;)</code>.</p>
+<ul>
+<li><p><strong>Ubuntu 25.10</strong> — R 4.5.1, g++ 15.2.0; 2× AMD EPYC
+9965 192-Core (384 physical / 768 logical cores), 1.0 TiB (16 × 64 GiB
+Micron, DDR5-5600, Multi-bit ECC), full AVX-512.</p></li>
+<li><p><strong>Windows 11 Pro for Workstations</strong> — R 4.6.1
+(ucrt), GCC 14.3.0; 2× AMD EPYC 7B12 64-Core (128 physical / 128 logical
+cores), about 224 GiB RAM.</p></li>
+</ul>
+</div>
+<div id="where-to-go-next" class="section level2">
+<h2>Where to go next</h2>
+<ul>
+<li><p><strong>Design philosophy</strong> —
+<code>vignette(&quot;dataprep-philosophy&quot;)</code>. Why the pipeline has the
+shape it does.</p></li>
+<li><p><strong>Cleaning pipeline walkthrough</strong> —
+<code>vignette(&quot;dataprep-cleaning&quot;)</code>. Step-by-step execution on a
+real dataset.</p></li>
+<li><p><strong>Performance and cross-engine consistency</strong> —
+<code>vignette(&quot;dataprep-performance&quot;)</code>. Full benchmark tables and
+8-engine consistency checks.</p></li>
+<li><p><strong>Fast reshaping</strong> —
+<code>vignette(&quot;dataprep-melt-dcast&quot;)</code>.</p></li>
+</ul>
+</div>
+<div id="session-info" class="section level2">
+<h2>Session info</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; R version 4.5.1 (2025-06-13)</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; Running under: Ubuntu 25.10</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; Matrix products: default</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-openmp/libblas.so.3 </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-openmp/libopenblasp-r0.3.30.so;  LAPACK version 3.12.0</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; locale:</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt;  [1] LC_CTYPE=zh_CN.UTF-8       LC_NUMERIC=C              </span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt;  [3] LC_TIME=zh_CN.UTF-8        LC_COLLATE=zh_CN.UTF-8    </span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt;  [5] LC_MONETARY=zh_CN.UTF-8    LC_MESSAGES=zh_CN.UTF-8   </span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt;  [7] LC_PAPER=zh_CN.UTF-8       LC_NAME=C                 </span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt;  [9] LC_ADDRESS=C               LC_TELEPHONE=C            </span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; [11] LC_MEASUREMENT=zh_CN.UTF-8 LC_IDENTIFICATION=C       </span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; time zone: Asia/Shanghai</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; attached base packages:</span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#&gt; other attached packages:</span></span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="co">#&gt; [1] dataprep_0.1.8</span></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="co">#&gt;  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.52         rlang_1.3.0       </span></span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="co">#&gt;  [5] xfun_0.61          otel_0.2.0         generics_0.1.4     S7_0.2.2          </span></span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="co">#&gt;  [9] jsonlite_2.0.0     glue_1.8.1         htmltools_0.5.9    sass_0.4.10       </span></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a><span class="co">#&gt; [13] scales_1.4.0       rmarkdown_2.32     grid_4.5.1         tibble_3.3.1      </span></span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a><span class="co">#&gt; [17] evaluate_1.0.5     jquerylib_0.1.4    fastmap_1.2.0      yaml_2.3.12       </span></span>
+<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a><span class="co">#&gt; [21] lifecycle_1.0.5    compiler_4.5.1     dplyr_1.2.1        RColorBrewer_1.1-3</span></span>
+<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a><span class="co">#&gt; [25] pkgconfig_2.0.3    Rcpp_1.1.2         farver_2.1.2       digest_0.6.39     </span></span>
+<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a><span class="co">#&gt; [29] R6_2.6.1           tidyselect_1.2.1   pillar_1.11.1      parallel_4.5.1    </span></span>
+<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a><span class="co">#&gt; [33] magrittr_2.0.5     bslib_0.12.0       withr_3.0.3        tools_4.5.1       </span></span>
+<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a><span class="co">#&gt; [37] gtable_0.3.6       ggplot2_4.0.3      cachem_1.1.0</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

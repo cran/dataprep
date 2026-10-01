@@ -1,0 +1,18 @@
+#!/bin/sh
+CXX=$(${R_HOME}/bin/R CMD config CXX)
+CXXFLAGS=$(${R_HOME}/bin/R CMD config CXXFLAGS)
+
+test_flag() {
+  echo 'int main(){return 0;}' > conftest.cpp
+  if $CXX $CXXFLAGS $1 conftest.cpp -o conftest >/dev/null 2>&1; then
+    rm -f conftest conftest.cpp; return 0
+  fi
+  rm -f conftest conftest.cpp; return 1
+}
+
+SAFE_OPTFLAGS=""
+for opt in -O3 -funroll-loops -ftree-vectorize; do
+  if test_flag "$opt"; then SAFE_OPTFLAGS="$SAFE_OPTFLAGS $opt"; fi
+done
+
+sed "s|@SAFE_OPTFLAGS@|$SAFE_OPTFLAGS|g" src/Makevars.in > src/Makevars

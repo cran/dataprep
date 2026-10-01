@@ -1,0 +1,49 @@
+# Citation for the dataprep R package.
+#
+# The primary reference is the methodological paper that the package
+# implements and extends. Users who publish with dataprep should cite
+# this paper; the software entry is provided for completeness so that
+# `citation("dataprep")` returns both.
+
+bibentry(
+  bibtype = "Article",
+  key     = "liang2020dataprep",
+  title   = "Efficient data preprocessing, episode classification,
+             and source apportionment of particle number
+             concentrations",
+  author  = c(
+    person("Chun-Sheng", "Liang"),
+    person("Hao",       "Wu"),
+    person("Hai-Yan",   "Li"),
+    person("Qiang",     "Zhang"),
+    person("Zhanqing",  "Li"),
+    person("Ke-Bin",    "He")
+  ),
+  journal     = "Science of the Total Environment",
+  year        = 2020,
+  volume      = 741,
+  pages       = "140923",
+  doi         = "10.1016/j.scitotenv.2020.140923",
+  textVersion = paste(
+    "Liang, C.-S., Wu, H., Li, H.-Y., Zhang, Q., Li, Z. & He, K.-B.",
+    "(2020). Efficient data preprocessing, episode classification,",
+    "and source apportionment of particle number concentrations.",
+    "Science of the Total Environment, 741, 140923.",
+    "https://doi.org/10.1016/j.scitotenv.2020.140923"
+  )
+)
+
+bibentry(
+  bibtype     = "Manual",
+  key         = "dataprep_pkg",
+  title       = "dataprep: Efficient and Flexible Data Preprocessing Tools",
+  author      = person("Chun-Sheng", "Liang"),
+  year        = 2026,
+  note        = "R package version 0.1.8",
+  url         = "https://github.com/chunshengliang/dataprep",
+  textVersion = paste(
+    "Liang, C.-S. (2026). dataprep: Efficient and Flexible Data",
+    "Preprocessing Tools. R package version 0.1.8.",
+    "https://github.com/chunshengliang/dataprep"
+  )
+)

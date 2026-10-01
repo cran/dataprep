@@ -1,68 +1,36 @@
 \name{percdata}
 \alias{percdata}
 \title{
-Calculate the top and bottom percentiles of each selected variable
+Calculate top and bottom percentiles of selected variables
 }
 \description{
-Outliers can be preliminarily checked by the calculated top and bottom percentiles. Basic R functions in packages from system library are used to get these percentiles of selected variables in data frames, instead of calling other packages. It saves time.
+Computes percentiles (quantiles) for selected numeric columns. By default, six bottom percentiles (0th to 0.5th) and six top percentiles (99.5th to 100th) are calculated. The function supports grouping.
 }
 \usage{
-percdata(data, start = NULL, end = NULL, group = NULL, diff = 0.1, part = 'both')
+percdata(data, cols = NULL, group = NULL, diff = 0.1,
+        part = "both", na.rm = TRUE, verbose = FALSE)
 }
 \arguments{
-  \item{data}{
-  A data frame to calculate percentiles, from the column \code{start} to the column \code{end}.
-}
-  \item{start}{
-  The column number of the first variable to calculate percentiles for.
-}
-  \item{end}{
-  The column number of the last variable to calculate percentiles for.
-}
-  \item{group}{
-  The column number of the grouping variable. It can be selected according to whether the data needs to be processed in groups. If grouping is not required, leave it default (NULL); if grouping is required, set \code{group} as the column number (position) where the grouping variable is located. If there are more than one grouping variable, it can be turned into a longer group through combination and transformation in advance.
-}
-  \item{diff}{
-  The common difference between \code{quantile}'s \code{probs}. Default is 0.1.
-}
-  \item{part}{
-  The option of calculating bottom and/or top percentiles (parts). Default is 'both', or 2 for both bottom and top parts. Setting it as 'bottom' or 0 for bottom part and 'top' or 1 for top part.
-}
+  \item{data}{A data frame, matrix, or numeric vector. If a vector, a data frame is created internally.}
+  \item{cols}{Column indices or names of numeric variables. If \code{NULL}, all numeric columns are used.}
+  \item{group}{Optional grouping column index or name. If provided, percentiles are computed separately for each group.}
+  \item{diff}{Common difference between quantile probabilities. Default is 0.1.}
+  \item{part}{Which parts to return: \code{"both"} (default), \code{"bottom"}, or \code{"top"}. For backward compatibility, \code{part} also accepts the integer codes \code{2} (\code{"both"}), \code{0} (\code{"bottom"}), and \code{1} (\code{"top"}).}
+  \item{na.rm}{Logical; if \code{TRUE}, NA values are removed before quantile computation.}
+  \item{verbose}{Logical; if \code{TRUE}, prints timing message.}
 }
 \details{
-The data to be processed ranges from the column \code{start} to the last column \code{end}. The column numbers of these two columns are needed for the arguments. This requires that the variables of the data to be processed are arranged continuously in the database or table. Or else, it is necessary to move the columns in advance to make a continuous arrangement.
+The function uses \code{stats::quantile()} on each selected column. For grouped data, percentiles are computed within each group.
 }
 \value{
-  Top (highest or greatest) and bottom (lowest or smallest) percentiles are calculated. According to the default \code{diff} (=0.1), the calculated values are as follows.
-  \item{0th }{Quantile with \code{probs = 0}}
-  \item{0.1th }{Quantile with \code{probs = 0.001}}
-  \item{0.2th }{Quantile with \code{probs = 0.002}}
-  \item{0.3th }{Quantile with \code{probs = 0.003}}
-  \item{0.4th }{Quantile with \code{probs = 0.004}}
-  \item{0.5th }{Quantile with \code{probs = 0.005}}
-  \item{99.5th }{Quantile with \code{probs = 0.995}}
-  \item{99.6th }{Quantile with \code{probs = 0.996}}
-  \item{99.7th }{Quantile with \code{probs = 0.997}}
-  \item{99.8th }{Quantile with \code{probs = 0.998}}
-  \item{99.9th }{Quantile with \code{probs = 0.999}}
-  \item{100th }{Quantile with \code{probs = 1}}
+A data frame with rows corresponding to percentiles and columns corresponding to variables (plus a \code{percentile} column). If grouped, an additional grouping column is present.
 }
 \references{
-1. Example data is from https://smear.avaa.csc.fi/download. It includes particle number concentrations in SMEAR I Varrio forest.
+1. Example data is from \url{https://smear.avaa.csc.fi/download}. It includes particle number concentrations in SMEAR I Varrio forest.
 }
-
 \author{
-Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
-}
-
-\seealso{
-\code{dataprep::percplot}
+Chun-Sheng Liang <chun-shengliang@qq.com>
 }
 \examples{
-# Select the grouping variable and remaining variables after deletion by varidele.
-# Column 4 ('monthyear') is the group and the fraction for varidele is 0.25.
-# After extracting according to the result by varidele, the group is in the first column.
-percdata(data[,c(4,27:61)],2,36,1)
+percdata(data, cols = 27:61, group = 4)
 }
-
-

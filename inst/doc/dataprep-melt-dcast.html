@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>dataprep: fast reshaping with melt() and dcast()</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">dataprep: fast reshaping with melt() and
+dcast()</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(dataprep)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span></code></pre></div>
+<div id="why-another-reshape-implementation" class="section level2">
+<h2>Why another reshape implementation</h2>
+<p><code>melt()</code> and <code>dcast()</code> in <code>dataprep</code>
+0.1.8 are drop-in replacements for <code>reshape2::melt</code> /
+<code>reshape2::dcast</code>, but the underlying code is written in C++
+with SIMD (AVX2 / AVX-512) and optional OpenMP parallelism. Both
+functions produce output identical to <code>reshape2</code>,
+<code>data.table</code>, <code>tidyr</code>, <code>pandas</code>,
+<code>polars</code>, <code>dask</code>, and <code>duckdb</code> on every
+tested shape, within <code>tol = 1e-12</code>.</p>
+<p>The speed-up relative to each of the seven alternatives spans:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th align="right">Range across both hosts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>melt</code></td>
+<td align="right">0.6–1628.9×</td>
+</tr>
+<tr class="even">
+<td><code>dcast</code></td>
+<td align="right">1.9–799.8×</td>
+</tr>
+</tbody>
+</table>
+<p>The median across all tested cells and all competitors is 11.3× on
+Ubuntu and 5.6× on Windows for <code>melt</code>, and 46.5× on Ubuntu
+and 41.4× on Windows for <code>dcast</code>. The mean is 67.8× and 46.6×
+for <code>melt</code>, and 90.2× and 76.6× for <code>dcast</code>,
+respectively. The <code>melt</code> median is pulled down by the 1e5-row
+small tables; at larger scales the speed-up is much higher. Full tables
+— including mean, median, and per-competitor ranges — are in
+<code>vignette(&quot;dataprep-performance&quot;)</code> and
+<code>README.md</code>.</p>
+<p>The sub-1.0× cells are <code>polars</code> at 1e7 rows × 10 id + 9
+val on Ubuntu (0.6×), and <code>polars</code> at 1e5 rows × 10 id + 9
+val on Windows (0.7×). Every other cell has <code>dataprep</code> ahead
+of or on par with the fastest competitor.</p>
+</div>
+<div id="test-environment" class="section level2">
+<h2>Test environment</h2>
+<p>Benchmarks were run on two reference hosts. Only the core
+configuration is listed here; full hardware details are in
+<code>README.md</code>.</p>
+<ul>
+<li><p><strong>Ubuntu 25.10</strong> — 2× AMD EPYC 9965 192-Core (384
+physical / 768 logical cores), 1.0 TiB (16 × 64 GiB Micron, DDR5-5600,
+Multi-bit ECC), full AVX-512; R 4.5.1, g++ 15.2.0.</p></li>
+<li><p><strong>Windows 11 Pro for Workstations</strong> — 2× AMD EPYC
+7B12 64-Core (128 physical / 128 logical cores), about 224 GiB RAM, no
+AVX-512; R 4.6.1 (ucrt), GCC 14.3.0.</p></li>
+</ul>
+<p>Software versions on both hosts: <code>data.table</code> 1.18.6.1,
+<code>reshape2</code> 1.4.5, <code>tidyr</code> 1.3.2,
+<code>reticulate</code> 1.47.0; Python 3.13.7 (Ubuntu) / 3.13.15
+(Windows), <code>pandas</code> 3.0.6, <code>polars</code> 1.44.2
+(runtime rt64), <code>dask</code> 2026.8.0, <code>duckdb</code>
+1.5.5.</p>
+<p>Reproducing the benchmarks:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="at">DATAPREP_RUN_BENCHMARK =</span> <span class="st">&quot;1&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">system.file</span>(<span class="st">&quot;benchmark_melt_dcast.R&quot;</span>, <span class="at">package =</span> <span class="st">&quot;dataprep&quot;</span>))</span></code></pre></div>
+</div>
+<div id="wide-to-long-with-melt" class="section level2">
+<h2>Wide to long with <code>melt()</code></h2>
+<div id="basic-usage" class="section level3">
+<h3>Basic usage</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">id       =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">category =</span> <span class="fu">factor</span>(<span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>)),</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">v1       =</span> <span class="fu">c</span>(<span class="fl">1.1</span>, <span class="fl">2.2</span>, <span class="fl">3.3</span>),</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">v2       =</span> <span class="fu">c</span>(<span class="fl">4.4</span>, <span class="fl">5.5</span>, <span class="fl">6.6</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>)</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="fu">melt</span>(df, <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;category&quot;</span>))</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;   id category variable value</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; 1  1        a       v1   1.1</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; 2  2        b       v1   2.2</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; 3  3        c       v1   3.3</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; 4  1        a       v2   4.4</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; 5  2        b       v2   5.5</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; 6  3        c       v2   6.6</span></span></code></pre></div>
+</div>
+<div id="measure-side-specification" class="section level3">
+<h3>Measure-side specification</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">melt</span>(df, <span class="at">measure.vars =</span> <span class="fu">c</span>(<span class="st">&quot;v1&quot;</span>, <span class="st">&quot;v2&quot;</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt;   id category variable value</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; 1  1        a       v1   1.1</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; 2  2        b       v1   2.2</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; 3  3        c       v1   3.3</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; 4  1        a       v2   4.4</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; 5  2        b       v2   5.5</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; 6  3        c       v2   6.6</span></span></code></pre></div>
+</div>
+<div id="automatic-id-inference" class="section level3">
+<h3>Automatic ID inference</h3>
+<p>Non-numeric and factor columns are treated as IDs by default.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">melt</span>(df)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt;   category variable value</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; 1        a       id   1.0</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; 2        b       id   2.0</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; 3        c       id   3.0</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; 4        a       v1   1.1</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; 5        b       v1   2.2</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; 6        c       v1   3.3</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; 7        a       v2   4.4</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; 8        b       v2   5.5</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; 9        c       v2   6.6</span></span></code></pre></div>
+</div>
+<div id="custom-column-names-and-na.rm" class="section level3">
+<h3>Custom column names and <code>na.rm</code></h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>df_na <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">x  =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="cn">NA</span>, <span class="dv">3</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">y  =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">5</span>, <span class="cn">NA</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="fu">melt</span>(df_na, <span class="at">id.vars =</span> <span class="st">&quot;id&quot;</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>     <span class="at">variable.name =</span> <span class="st">&quot;var&quot;</span>, <span class="at">value.name =</span> <span class="st">&quot;val&quot;</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>     <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;   id var val</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; 1  1   x   1</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; 2  3   x   3</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; 3  1   y   4</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt; 4  2   y   5</span></span></code></pre></div>
+</div>
+<div id="memory-layout-major-row-vs-major-col" class="section level3">
+<h3>Memory layout: <code>major = &quot;row&quot;</code> vs
+<code>major = &quot;col&quot;</code></h3>
+<p>Row-major (<code>&quot;row&quot;</code>) is usually faster when there are few
+measure columns; column-major (<code>&quot;col&quot;</code>) is often faster when
+there are many measure columns because bulk copies dominate.
+<code>major = NULL</code> (the default) is equivalent to
+<code>&quot;col&quot;</code>; there is no automatic switching based on the input
+shape.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>wide50 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>,</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>                     <span class="fu">matrix</span>(<span class="fu">rnorm</span>(<span class="dv">100</span> <span class="sc">*</span> <span class="dv">50</span>), <span class="at">ncol =</span> <span class="dv">50</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>res_row <span class="ot">&lt;-</span> <span class="fu">melt</span>(wide50, <span class="at">id.vars =</span> <span class="st">&quot;id&quot;</span>, <span class="at">major =</span> <span class="st">&quot;row&quot;</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>res_col <span class="ot">&lt;-</span> <span class="fu">melt</span>(wide50, <span class="at">id.vars =</span> <span class="st">&quot;id&quot;</span>, <span class="at">major =</span> <span class="st">&quot;col&quot;</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="fu">identical</span>(<span class="fu">as.data.frame</span>(res_row), <span class="fu">as.data.frame</span>(res_col))</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+</div>
+<div id="thread-control" class="section level3">
+<h3>Thread control</h3>
+<p><code>cores</code> controls OpenMP.
+<code>options(dataprep.cores = ...)</code> sets a default for the whole
+session.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">options</span>(<span class="at">dataprep.cores =</span> <span class="dv">4</span><span class="dt">L</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="fu">melt</span>(df, <span class="at">id.vars =</span> <span class="st">&quot;id&quot;</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt;   id variable value</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt; 1  1 category    NA</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co">#&gt; 2  2 category    NA</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co">#&gt; 3  3 category    NA</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co">#&gt; 4  1       v1   1.1</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt; 5  2       v1   2.2</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; 6  3       v1   3.3</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt; 7  1       v2   4.4</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; 8  2       v2   5.5</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt; 9  3       v2   6.6</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="fu">options</span>(<span class="at">dataprep.cores =</span> <span class="cn">NULL</span>)</span></code></pre></div>
+</div>
+</div>
+<div id="why-melt-is-fast" class="section level2">
+<h2>Why <code>melt()</code> is fast</h2>
+<p><code>melt_cpp</code> uses six design choices that matter at
+scale.</p>
+<div id="two-layout-paths-selected-by-major" class="section level3">
+<h3>1. Two layout paths, selected by <code>major</code></h3>
+<p><code>melt()</code> produces the same long-format table as
+<code>reshape2::melt</code> (column-major, <code>major = &quot;col&quot;</code>)
+or <code>tidyr::pivot_longer</code> (row-major,
+<code>major = &quot;row&quot;</code>). The two layouts have very different memory
+access patterns:</p>
+<ul>
+<li><p><strong>Column-major</strong> writes each output column as one
+contiguous block: for measure column <code>k</code>, the output block
+<code>[k * n .. (k+1) * n)</code> is a direct <code>memcpy</code> of the
+input column. This is the fastest possible path when the number of value
+columns is moderate.</p></li>
+<li><p><strong>Row-major</strong> writes every row as
+<code>n_meas</code> consecutive doubles. For small <code>n_meas</code>
+this is compact, but for large <code>n_meas</code> it requires a per-row
+transpose.</p></li>
+</ul>
+<p><code>major = NULL</code> (the default) is equivalent to
+<code>&quot;col&quot;</code>; there is no automatic switching based on the input
+shape.</p>
+</div>
+<div id="simd-streaming-stores" class="section level3">
+<h3>2. SIMD streaming stores</h3>
+<p>For large outputs, <code>melt_cpp</code> uses AVX-512 or AVX2
+streaming stores (<code>_mm512_stream_pd</code>,
+<code>_mm256_stream_si256</code>) to write directly to memory, bypassing
+the CPU cache. This avoids the cache pollution that would otherwise
+evict useful input data, and it is the reason the 1e8-row
+<code>melt</code> finishes in under 0.5 s on Ubuntu (vs 2.6 s for the
+next-fastest engine, <code>polars</code>) and in under 1.3 s on Windows.
+A <code>_mm_sfence()</code> is issued at the end of each streaming
+region to guarantee visibility.</p>
+</div>
+<div id="hugepage-hint-for-large-outputs" class="section level3">
+<h3>3. Hugepage hint for large outputs</h3>
+<p>Output vectors larger than 512 KB are allocated through
+<code>Rf_allocVector()</code> and then hinted with
+<code>madvise(MADV_HUGEPAGE)</code>, so the kernel can back them with 2
+MB pages. This reduces first-touch page faults on the 1e8-row case.
+There is no custom <code>R_allocator_t</code>, no
+<code>MAP_POPULATE</code>, and no free pool: those were described in
+earlier drafts but are not part of the shipped 0.1.8 backend.</p>
+</div>
+<div id="fast-paths-for-small-inputs" class="section level3">
+<h3>4. Fast paths for small inputs</h3>
+<p>Two fast paths are used. Tiny inputs (<code>n &lt;= 2048</code>,
+<code>n_meas &lt;= 64</code>, <code>n_id &lt;= 8</code>) route to
+<code>melt_tiny_cpp</code>; small inputs
+(<code>total &lt;= 131072</code>, <code>n_meas &lt;= 256</code>) route
+to <code>melt_small_cpp</code>. Both skip hugepage hinting, OpenMP
+setup, and thread-cap detection. This is what makes <code>melt()</code>
+the fastest engine even on 1e3-row tables, where the initialization
+overhead of the other backends dominates their runtimes.</p>
+</div>
+<div id="cache-aware-block-sizing" class="section level3">
+<h3>5. Cache-aware block sizing</h3>
+<p>For the row-major path, the per-thread block size is computed from
+the L3 cache size (read once from
+<code>/sys/devices/system/cpu/cpu0/cache/index3/size</code> on Linux).
+Each block is sized to fit in half of L3, which keeps both the input
+reads and the output writes inside the cache for the duration of the
+block.</p>
+</div>
+<div id="per-call-caches-for-sexp-and-factor-levels" class="section level3">
+<h3>6. Per-call caches for SEXP and factor levels</h3>
+<p>The <code>&quot;data.frame&quot;</code> class tag, the <code>&quot;factor&quot;</code>
+class tag, the default <code>&quot;variable&quot;</code> / <code>&quot;value&quot;</code>
+column names, and the factor levels vector are constructed once per
+process and reused afterwards via <code>R_PreserveObject</code>. This
+removes a small but measurable per-call cost that shows up on the
+small-input benchmarks.</p>
+</div>
+</div>
+<div id="long-to-wide-with-dcast" class="section level2">
+<h2>Long to wide with <code>dcast()</code></h2>
+<div id="basic-usage-1" class="section level3">
+<h3>Basic usage</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>long <span class="ot">&lt;-</span> <span class="fu">melt</span>(df, <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;category&quot;</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">dcast</span>(long, <span class="at">id =</span> <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;category&quot;</span>),</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>      <span class="at">variable =</span> <span class="st">&quot;variable&quot;</span>, <span class="at">value =</span> <span class="st">&quot;value&quot;</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt;   id category  v1  v2</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; 1  1        a 1.1 4.4</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt; 2  2        b 2.2 5.5</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt; 3  3        c 3.3 6.6</span></span></code></pre></div>
+</div>
+<div id="formula-interface" class="section level3">
+<h3>Formula interface</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">dcast</span>(long, <span class="at">formula =</span> id <span class="sc">+</span> category <span class="sc">~</span> variable,</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>      <span class="at">value.var =</span> <span class="st">&quot;value&quot;</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#&gt;   id category  v1  v2</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt; 1  1        a 1.1 4.4</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; 2  2        b 2.2 5.5</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt; 3  3        c 3.3 6.6</span></span></code></pre></div>
+</div>
+<div id="fill-missing-cells" class="section level3">
+<h3>Fill missing cells</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">dcast</span>(long, <span class="at">id =</span> <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;category&quot;</span>),</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>      <span class="at">variable =</span> <span class="st">&quot;variable&quot;</span>, <span class="at">value =</span> <span class="st">&quot;value&quot;</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>      <span class="at">fill =</span> <span class="dv">0</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co">#&gt;   id category  v1  v2</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co">#&gt; 1  1        a 1.1 4.4</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co">#&gt; 2  2        b 2.2 5.5</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co">#&gt; 3  3        c 3.3 6.6</span></span></code></pre></div>
+</div>
+<div id="aggregating-duplicate-pairs" class="section level3">
+<h3>Aggregating duplicate pairs</h3>
+<p>If a <code>(id, variable)</code> pair appears more than once, pass
+<code>fun.aggregate</code>. The default is “last occurrence wins”,
+matching <code>data.table::dcast</code>’s
+<code>fun.aggregate = NULL</code> behaviour.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>long_dup <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="at">id       =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>),</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="at">variable =</span> <span class="fu">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;x&quot;</span>, <span class="st">&quot;x&quot;</span>),</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="at">value    =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>)</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="fu">dcast</span>(long_dup, <span class="at">id =</span> <span class="st">&quot;id&quot;</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>      <span class="at">variable =</span> <span class="st">&quot;variable&quot;</span>, <span class="at">value =</span> <span class="st">&quot;value&quot;</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>      <span class="at">fun.aggregate =</span> mean)</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt;   id   x</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; 1  1 1.5</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt; 2  2 3.0</span></span></code></pre></div>
+</div>
+<div id="na.rm" class="section level3">
+<h3><code>na.rm</code></h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>long_na <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="at">id       =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">2</span>),</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="at">variable =</span> <span class="fu">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;y&quot;</span>, <span class="st">&quot;x&quot;</span>, <span class="st">&quot;y&quot;</span>),</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="at">value    =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="cn">NA</span>, <span class="dv">3</span>, <span class="dv">4</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>)</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="fu">dcast</span>(long_na, <span class="at">id =</span> <span class="st">&quot;id&quot;</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>      <span class="at">variable =</span> <span class="st">&quot;variable&quot;</span>, <span class="at">value =</span> <span class="st">&quot;value&quot;</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>      <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="co">#&gt;   id x  y</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt; 1  1 1 NA</span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="co">#&gt; 2  2 3  4</span></span></code></pre></div>
+</div>
+</div>
+<div id="why-dcast-is-fast" class="section level2">
+<h2>Why <code>dcast()</code> is fast</h2>
+<p><code>dcast_cpp</code> performs four design choices that matter at
+scale.</p>
+<div id="block-path-detection-phase-0a0c" class="section level3">
+<h3>1. Block-path detection (Phase 0a–0c)</h3>
+<p>When the input is a canonical <code>melt()</code> output —
+<code>variable</code> is periodic and every <code>id</code> column is
+constant within one period — <code>dcast_cpp</code> skips the hash
+tables entirely and performs a tile transpose: each tile of
+<code>TILE x period</code> doubles is read contiguously into an L1
+buffer, transposed in place, and written contiguously to the output
+columns. This keeps both reads and writes sequential and enables OpenMP
+parallelisation. The cost per tile is <code>O(TILE * period)</code>,
+independent of the number of levels, which is why wide-level tables
+scale well.</p>
+</div>
+<div id="bit-packed-keys-and-96-bit-fingerprint-fallback" class="section level3">
+<h3>2. 64-bit packed keys and 96-bit fingerprint fallback</h3>
+<p>For block-aligned input with few <code>id</code> columns,
+<code>dcast_cpp</code> packs the row key into a single
+<code>uint64_t</code>. When the combined bit budget of the
+<code>id</code> columns exceeds 64, it falls back to a 96-bit
+fingerprint (<code>uint64_t h1 + uint32_t h2</code>) computed by a 4-way
+parallel FNV-1a and stored in a 16-byte slot table, which is more
+cache-friendly than the previous 128-bit scheme.</p>
+</div>
+<div id="radix-sort-for-shuffle-friendly-input" class="section level3">
+<h3>3. Radix sort for shuffle-friendly input</h3>
+<p>When the input is not sorted, a 4-pass LSD radix sort over the packed
+keys replaces the hash table entirely. For inputs whose rows are already
+grouped — which is the common case after a <code>melt()</code> +
+<code>arrange()</code> pipeline — the sort is skipped.</p>
+</div>
+<div id="permutation-shortcut" class="section level3">
+<h3>4. Permutation shortcut</h3>
+<p>When the block path is taken and the <code>id</code> column is a
+permutation of <code>1..n_blocks</code> (the most common case for
+canonical <code>melt()</code> output), a direct-index shortcut bypasses
+both the hash table and the sort.</p>
+<p>The full pipeline is described in the <code>dcast()</code> help
+page.</p>
+</div>
+</div>
+<div id="where-the-gap-is-narrowest" class="section level2">
+<h2>Where the gap is narrowest</h2>
+<p>The <code>dcast</code> 1e6 × 100 <code>id</code> cell is the only
+case in the entire benchmark suite where a competitor reaches a
+single-digit ratio: <code>polars</code> at 6.7× on Ubuntu and 2.6× on
+Windows. Both remain behind <code>dataprep</code>. This is because
+<code>polars</code>’s SIMD hash is competitive when the row key is very
+wide (100 columns), while <code>dcast_cpp</code>’s 96-bit fingerprint
+verification is <code>O(n_id)</code> per row in that regime.</p>
+</div>
+<div id="cross-engine-consistency" class="section level2">
+<h2>Cross-engine consistency</h2>
+<p><code>melt()</code> and <code>dcast()</code> produce output identical
+to <code>reshape2</code> (the reference implementation) on every tested
+cell. All pairs of engines agree pairwise within
+<code>tol = 1e-12</code>.</p>
+<div id="melt-consistency" class="section level3">
+<h3><code>melt</code> consistency</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="right">rows</th>
+<th align="right">n_id</th>
+<th align="right">n_val</th>
+<th align="right">engines passed</th>
+<th>pairwise</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1,000</td>
+<td align="right">1</td>
+<td align="right">9</td>
+<td align="right">8/8</td>
+<td>all consistent</td>
+</tr>
+<tr class="even">
+<td align="right">100,000</td>
+<td align="right">1</td>
+<td align="right">9</td>
+<td align="right">8/8</td>
+<td>all consistent</td>
+</tr>
+<tr class="odd">
+<td align="right">1,000</td>
+<td align="right">1</td>
+<td align="right">100</td>
+<td align="right">8/8</td>
+<td>all consistent</td>
+</tr>
+<tr class="even">
+<td align="right">10,000</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="right">8/8</td>
+<td>all consistent</td>
+</tr>
+</tbody>
+</table>
+<p>Engines: <code>dataprep</code>, <code>reshape2</code>,
+<code>data.table</code>, <code>tidyr</code>, <code>pandas</code>,
+<code>polars</code>, <code>dask</code>, <code>duckdb</code>.</p>
+</div>
+<div id="dcast-consistency" class="section level3">
+<h3><code>dcast</code> consistency</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="right">n_long</th>
+<th align="right">n_id</th>
+<th align="right">n_levels</th>
+<th align="right">engines passed</th>
+<th>pairwise</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">5,000</td>
+<td align="right">2</td>
+<td align="right">5</td>
+<td align="right">8/8</td>
+<td>all consistent</td>
+</tr>
+<tr class="even">
+<td align="right">50,000</td>
+<td align="right">1</td>
+<td align="right">50</td>
+<td align="right">8/8</td>
+<td>all consistent</td>
+</tr>
+<tr class="odd">
+<td align="right">50,000</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="right">8/8</td>
+<td>all consistent</td>
+</tr>
+<tr class="even">
+<td align="right">1,000,000</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">8/8</td>
+<td>all consistent</td>
+</tr>
+</tbody>
+</table>
+<p>The consistency scripts are shipped under <code>inst/</code>:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="at">DATAPREP_RUN_BENCHMARK =</span> <span class="st">&quot;1&quot;</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">system.file</span>(<span class="st">&quot;benchmark_melt_dcast.R&quot;</span>, <span class="at">package =</span> <span class="st">&quot;dataprep&quot;</span>))</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="fu">melt_all_engines</span>(<span class="dv">10000</span><span class="dt">L</span>, <span class="at">n_id =</span> <span class="dv">1</span><span class="dt">L</span>, <span class="at">n_val =</span> <span class="dv">9</span><span class="dt">L</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="fu">dcast_all_engines</span>(<span class="dv">1000</span><span class="dt">L</span>, <span class="at">n_id =</span> <span class="dv">2</span><span class="dt">L</span>, <span class="at">n_val =</span> <span class="dv">5</span><span class="dt">L</span>)</span></code></pre></div>
+</div>
+</div>
+<div id="round-trip-example" class="section level2">
+<h2>Round-trip example</h2>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>wide  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="at">a =</span> <span class="fu">rnorm</span>(<span class="dv">5</span>), <span class="at">b =</span> <span class="fu">rnorm</span>(<span class="dv">5</span>))</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>long  <span class="ot">&lt;-</span> <span class="fu">melt</span>(wide, <span class="at">id.vars =</span> <span class="st">&quot;id&quot;</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>back  <span class="ot">&lt;-</span> <span class="fu">dcast</span>(long, <span class="at">id =</span> <span class="st">&quot;id&quot;</span>,</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>               <span class="at">variable =</span> <span class="st">&quot;variable&quot;</span>, <span class="at">value =</span> <span class="st">&quot;value&quot;</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="fu">all.equal</span>(<span class="fu">as.data.frame</span>(back)[<span class="fu">order</span>(back<span class="sc">$</span>id), <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>)],</span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>          wide[, <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>)],</span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>          <span class="at">tolerance =</span> <span class="fl">1e-12</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+</div>
+<div id="headline-numbers" class="section level2">
+<h2>Headline numbers</h2>
+<p>The tables below summarise the two hosts in one place. Full per-cell
+tables are in <code>vignette(&quot;dataprep-performance&quot;)</code>.</p>
+<div id="ubuntu-25.10" class="section level3">
+<h3>Ubuntu 25.10</h3>
+<table>
+<colgroup>
+<col width="15%" />
+<col width="21%" />
+<col width="21%" />
+<col width="21%" />
+<col width="21%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th align="right">Min</th>
+<th align="right">Median</th>
+<th align="right">Mean</th>
+<th align="right">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>melt()</code></td>
+<td align="right">0.6× (polars @ 1e7 × 19 × 10 × 9)</td>
+<td align="right">11.3×</td>
+<td align="right">67.8×</td>
+<td align="right">1628.9× (dask @ 1e3 × 10001 × 1 × 10000)</td>
+</tr>
+<tr class="even">
+<td><code>dcast()</code></td>
+<td align="right">1.9× (reshape2 @ 1e3 × 1 × 10)</td>
+<td align="right">46.5×</td>
+<td align="right">90.2×</td>
+<td align="right">463.8× (data.table @ 1e8 × 1 × 100)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="windows-11-pro-for-workstations" class="section level3">
+<h3>Windows 11 Pro for Workstations</h3>
+<table>
+<colgroup>
+<col width="15%" />
+<col width="21%" />
+<col width="21%" />
+<col width="21%" />
+<col width="21%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th align="right">Min</th>
+<th align="right">Median</th>
+<th align="right">Mean</th>
+<th align="right">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>melt()</code></td>
+<td align="right">0.7× (polars @ 1e5 × 19 × 10 × 9)</td>
+<td align="right">5.6×</td>
+<td align="right">46.6×</td>
+<td align="right">893.2× (dask @ 1e3 × 10001 × 1 × 10000)</td>
+</tr>
+<tr class="even">
+<td><code>dcast()</code></td>
+<td align="right">2.6× (polars @ 1e6 × 100 × 10)</td>
+<td align="right">41.4×</td>
+<td align="right">76.6×</td>
+<td align="right">799.8× (duckdb @ 1e8 × 1 × 100)</td>
+</tr>
+</tbody>
+</table>
+<p>For <code>melt()</code>, on the largest cells (1e8 rows, 8 GB of
+input), <code>dataprep</code> is the only engine that completes within
+2.5 s: under 0.3 s on Ubuntu and under 1.0 s on Windows.</p>
+</div>
+</div>
+<div id="session-info" class="section level2">
+<h2>Session info</h2>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="co">#&gt; R version 4.5.1 (2025-06-13)</span></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="co">#&gt; Running under: Ubuntu 25.10</span></span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a><span class="co">#&gt; Matrix products: default</span></span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-openmp/libblas.so.3 </span></span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-openmp/libopenblasp-r0.3.30.so;  LAPACK version 3.12.0</span></span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a><span class="co">#&gt; locale:</span></span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a><span class="co">#&gt;  [1] LC_CTYPE=zh_CN.UTF-8       LC_NUMERIC=C              </span></span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a><span class="co">#&gt;  [3] LC_TIME=zh_CN.UTF-8        LC_COLLATE=zh_CN.UTF-8    </span></span>
+<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a><span class="co">#&gt;  [5] LC_MONETARY=zh_CN.UTF-8    LC_MESSAGES=zh_CN.UTF-8   </span></span>
+<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a><span class="co">#&gt;  [7] LC_PAPER=zh_CN.UTF-8       LC_NAME=C                 </span></span>
+<span id="cb16-15"><a href="#cb16-15" tabindex="-1"></a><span class="co">#&gt;  [9] LC_ADDRESS=C               LC_TELEPHONE=C            </span></span>
+<span id="cb16-16"><a href="#cb16-16" tabindex="-1"></a><span class="co">#&gt; [11] LC_MEASUREMENT=zh_CN.UTF-8 LC_IDENTIFICATION=C       </span></span>
+<span id="cb16-17"><a href="#cb16-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb16-18"><a href="#cb16-18" tabindex="-1"></a><span class="co">#&gt; time zone: Asia/Shanghai</span></span>
+<span id="cb16-19"><a href="#cb16-19" tabindex="-1"></a><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span id="cb16-20"><a href="#cb16-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb16-21"><a href="#cb16-21" tabindex="-1"></a><span class="co">#&gt; attached base packages:</span></span>
+<span id="cb16-22"><a href="#cb16-22" tabindex="-1"></a><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span id="cb16-23"><a href="#cb16-23" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb16-24"><a href="#cb16-24" tabindex="-1"></a><span class="co">#&gt; other attached packages:</span></span>
+<span id="cb16-25"><a href="#cb16-25" tabindex="-1"></a><span class="co">#&gt; [1] dataprep_0.1.8</span></span>
+<span id="cb16-26"><a href="#cb16-26" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb16-27"><a href="#cb16-27" tabindex="-1"></a><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span id="cb16-28"><a href="#cb16-28" tabindex="-1"></a><span class="co">#&gt;  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.52         rlang_1.3.0       </span></span>
+<span id="cb16-29"><a href="#cb16-29" tabindex="-1"></a><span class="co">#&gt;  [5] xfun_0.61          otel_0.2.0         generics_0.1.4     S7_0.2.2          </span></span>
+<span id="cb16-30"><a href="#cb16-30" tabindex="-1"></a><span class="co">#&gt;  [9] jsonlite_2.0.0     glue_1.8.1         htmltools_0.5.9    sass_0.4.10       </span></span>
+<span id="cb16-31"><a href="#cb16-31" tabindex="-1"></a><span class="co">#&gt; [13] scales_1.4.0       rmarkdown_2.32     grid_4.5.1         tibble_3.3.1      </span></span>
+<span id="cb16-32"><a href="#cb16-32" tabindex="-1"></a><span class="co">#&gt; [17] evaluate_1.0.5     jquerylib_0.1.4    fastmap_1.2.0      yaml_2.3.12       </span></span>
+<span id="cb16-33"><a href="#cb16-33" tabindex="-1"></a><span class="co">#&gt; [21] lifecycle_1.0.5    compiler_4.5.1     dplyr_1.2.1        RColorBrewer_1.1-3</span></span>
+<span id="cb16-34"><a href="#cb16-34" tabindex="-1"></a><span class="co">#&gt; [25] pkgconfig_2.0.3    Rcpp_1.1.2         farver_2.1.2       digest_0.6.39     </span></span>
+<span id="cb16-35"><a href="#cb16-35" tabindex="-1"></a><span class="co">#&gt; [29] R6_2.6.1           tidyselect_1.2.1   pillar_1.11.1      parallel_4.5.1    </span></span>
+<span id="cb16-36"><a href="#cb16-36" tabindex="-1"></a><span class="co">#&gt; [33] magrittr_2.0.5     bslib_0.12.0       withr_3.0.3        tools_4.5.1       </span></span>
+<span id="cb16-37"><a href="#cb16-37" tabindex="-1"></a><span class="co">#&gt; [37] gtable_0.3.6       ggplot2_4.0.3      cachem_1.1.0</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

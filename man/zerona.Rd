@@ -4,23 +4,23 @@
 Turn zeros to missing values
 }
 \description{
-Zeros are suitable in logarithmic scale and should be removed for plots.
+Converts zero values to \code{NA}. Useful when zero represents an invalid measurement or when a logarithmic scale is desired.
 }
 \usage{
 zerona(x)
 }
 \arguments{
   \item{x}{
-A dataframe, matrix, or vector containing zeros.
+  A data frame, matrix, or vector containing zeros.
 }
 }
 \value{
-A dataframe, matrix, or vector with zeros being turned into missing values.
+An object of the same class with zeros replaced by \code{NA}.
 }
 \author{
-Chun-Sheng Liang <liangchunsheng@lzu.edu.cn>
+Chun-Sheng Liang <chun-shengliang@qq.com>
 }
 \examples{
 zerona(0:5)
-zerona(cbind(a=0:5,b=c(6:10,0)))
+zerona(cbind(a = 0:5, b = c(6:10, 0)))
 }

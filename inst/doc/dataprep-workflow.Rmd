@@ -1,0 +1,301 @@
+---
+title: "dataprep: a leakage-free preprocessing workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\documentclass{article}
+  %\VignetteIndexEntry{dataprep: a leakage-free preprocessing workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.align = "center",
+  fig.width = 6,
+  fig.height = 5.5,
+  out.width = "75%",
+  fig.retina = 2
+)
+```
+
+```{r}
+library(dataprep)
+set.seed(1)
+
+# The size-bin columns are the ones whose names are numeric
+# (1.00, 1.12, ..., 1000). This helper returns their integer
+# positions, excluding the four non-size columns (`date`,
+# `tconc`, `TPNC`, `monthyear`).
+size_bin_cols <- function(x) {
+  grep("^[-+]?[0-9]*\\.?[0-9]+$", names(x))
+}
+```
+
+## The data-leakage problem
+
+Standard preprocessing steps such as outlier detection, imputation,
+and scaling are often implemented as one-shot functions. If you
+apply them to training and test data separately, the test set
+ends up using its own statistics, which leaks information from the
+test set into the pipeline.
+
+`dataprep` 0.1.8 solves this with a two-step interface:
+
+* `prep_fit()` estimates every parameter (missing fraction,
+  outlier thresholds, imputation method, scaling centre/scale)
+  from the **training data only**, and returns a `prep_plan`.
+
+* `prep_transform()` applies the plan to new data without
+  re-estimating anything.
+
+The design mirrors `recipes::prep()` / `recipes::bake()` and
+`caret::preProcess()` / `caret::predict()`, but the underlying
+operations are the same C++ backends used by `varidele()`,
+`obsedele()`, `detect_outliers()`, `impute_missing()`, and
+`transform_data()`.
+
+> **Note on `data1`.** `data1` is the already-aggregated
+> seven-column version of `data`. It has no long missing runs and
+> no obvious outliers, so it is not a meaningful input for the
+> cleaning steps. All examples below therefore use the full
+> `data` table.
+
+## A minimal example
+
+```{r}
+train <- data[1:5000, c("date", "monthyear", "7.94", "8.91", "10")]
+test  <- data[5001:6000, c("date", "monthyear", "7.94", "8.91", "10")]
+
+plan <- prep_fit(
+  train,
+  cols       = 3:5,
+  group      = 2,
+  steps      = c("varidele", "outlier", "impute", "scale"),
+  fraction   = 0.5,
+  method_outlier = "iqr",
+  method_impute  = "linear",
+  scale_method   = "zscore"
+)
+
+str(plan, max.level = 2)
+```
+
+Apply the plan to the test set:
+
+```{r}
+test_clean <- prep_transform(plan, test)
+head(test_clean)
+```
+
+Note that `test_clean` has the same columns as the training data
+after the plan's `varidele` step, and its scaling uses the training
+set's centre / scale — not its own.
+
+## What is stored in the plan
+
+```{r}
+names(plan)
+names(plan$params)
+```
+
+* `params$varidele_keep` — logical mask of columns to keep
+* `params$outlier_thresholds` — lower / upper bounds per column
+  (or per column-group)
+* `params$impute_method` — imputation method string
+* `params$scale_center`, `params$scale_scale` — per-column
+  centring and scaling constants
+* `data_info` — original column names, indices, and the grouping
+  column, used to realign columns and re-apply grouped operations
+  when `test` is fed in with a different order
+
+### A note on degenerate columns
+
+A constant training column has `sd = 0`, `IQR = 0`, or
+`max - min = 0`. Storing `0` as `scale_val` would make
+`prep_transform()` divide by zero. `prep_fit()` stores `1` for
+such columns instead, so the transform becomes `x - center`
+(equivalently `x - x`), and `prep_transform()` additionally
+guards against `scale_val == 0` in case a plan is edited by hand.
+
+## Adding or removing steps
+
+`prep_fit()` accepts an ordered `steps` vector. Any subset of the
+following is allowed, and the order is respected as given:
+
+```{r, eval = FALSE}
+steps = c("varidele", "obsedele", "outlier", "impute", "scale")
+```
+
+* **`varidele`** — drop columns whose training-set missing fraction
+  is above `fraction`.
+* **`obsedele`** — drop rows with long consecutive `NA` runs. This step
+  does not store any threshold; it re-runs the anchor scan on the
+  new data using the `by` and `half` values from training.
+* **`outlier`** — detect and replace outliers with `NA` using IQR, MAD,
+  or percentile thresholds estimated on the training set.
+* **`impute`** — fill remaining `NA`s using LOCF, NOCB, linear, mean,
+  or median.
+* **`scale`** — z-score, min-max, robust, centre, or scale.
+
+If a step's parameter is not needed (e.g. `obsedele` does not
+learn anything from the training data that would be reused later),
+the plan simply stores the call arguments and re-runs the same
+operation on the test data.
+
+## Column-order independence
+
+`prep_transform()` realigns the new data by column name, not
+by position. If `test` has its columns in a different order from
+`train`, the plan still applies correctly:
+
+```{r}
+test_reordered <- test[, c("date", "10", "8.91", "7.94", "monthyear")]
+test_reordered_clean <- prep_transform(plan, test_reordered)
+identical(names(test_reordered_clean), names(test_clean))
+```
+
+## Missing-column detection
+
+If `newdata` is missing a required column, `prep_transform()`
+raises an error listing the missing names, rather than silently
+producing wrong output:
+
+```{r, error = TRUE}
+test_missing <- test[, c("date", "monthyear", "7.94", "8.91")]
+prep_transform(plan, test_missing)
+```
+
+```
+#> Error: newdata is missing required columns: 10
+```
+
+## Workflow with `dataprep()`
+
+For exploratory analysis where leakage is not a concern, the
+one-call `dataprep()` wrapper chains the four standard steps on
+the full `data` table:
+
+```{r}
+res <- dataprep(
+  data[1:1000, ],
+  cols     = size_bin_cols(data[1:1000, ]),
+  group    = 4,
+  interval = 5,
+  times    = 3
+)
+dim(res)
+```
+
+`dataprep()` and `prep_fit()` share the same underlying backends,
+but they make different promises:
+
+| Aspect | `dataprep()` | `prep_fit()` / `prep_transform()` |
+|---|---|---|
+| Use case | exploration, one-shot cleaning | train / test split, deployment |
+| Output | cleaned data frame | `prep_plan` object + cleaned data |
+| Leakage | re-estimates thresholds on every call | estimates once, applies everywhere |
+| Rows | keeps all rows whose anchors are adequate | same, but row sets can differ between train and test |
+| Speed | one-shot, no overhead | a small per-step overhead from plan bookkeeping |
+
+## Reporting
+
+`data_report()` is read-only, so it works on either `data` or
+`data1`. We use `data1` here for a compact output.
+
+```{r}
+data_report(data1, cols = 3:7, verbose = TRUE)
+invisible(data_report(data1, cols = 3:7))
+```
+
+## Full applied workflow
+
+A complete train / test workflow with the full cleaning pipeline:
+
+```{r, eval = FALSE}
+# 1. Inspect the raw data
+data_report(data, cols = size_bin_cols(data), verbose = TRUE)
+
+# 2. Fit a plan on the training split
+train <- data[1:5000, ]
+plan  <- prep_fit(
+  train,
+  cols     = size_bin_cols(train),
+  group    = 4,
+  steps    = c("varidele", "obsedele", "outlier", "impute", "scale"),
+  fraction = 0.5,
+  method_outlier = "iqr",
+  method_impute  = "linear",
+  scale_method   = "zscore"
+)
+
+# 3. Apply the same plan to the test split
+test       <- data[5001:6000, ]
+test_clean <- prep_transform(plan, test)
+
+# 4. Model on the cleaned training set,
+#    predict on the cleaned test set
+fit  <- lm(`7.94` ~ `8.91` + `10`,
+           data = plan$final_data)
+pred <- predict(fit, newdata = test_clean)
+```
+
+The key point is that `plan` is a self-contained object. It
+can be saved to disk (`saveRDS(plan, "plan.rds")`) and loaded in a
+later session (`plan <- readRDS("plan.rds")`) without any
+dependence on the training data.
+
+## When NOT to preprocess
+
+Not every dataset needs the full pipeline:
+
+1. **Already-aggregated data.** `data1` is the seven-column
+   aggregate of `data`. Running `varidele` / `obsedele` /
+   `condextr` / `shorvalu` on it would do nothing useful.
+
+2. **Models that tolerate missing values.** Gradient boosting,
+   random forests, and XGBoost handle `NA` natively. If your model
+   does, you can skip `impute` and keep the `NA`s.
+
+3. **Gaps shorter than the physical mixing time.** When the
+   aerosol is well-mixed, a few missing points can be interpolated
+   with negligible error, so `obsedele` can be relaxed by
+   increasing `half`.
+
+See `vignette("dataprep-philosophy")` for the full reasoning
+behind each of these cases.
+
+## Test environment
+
+The examples in this vignette are executed on Windows 11 Pro for
+Workstations (R 4.6.1 ucrt, GCC 14.3.0) with a 2× AMD EPYC 7B12
+64-Core processor and about 224 GiB RAM, and on Ubuntu 25.10
+(R 4.5.1, g++ 15.2.0) with a 2× AMD EPYC 9965 192-Core processor
+(384 physical / 768 logical cores), 1.0 TiB (16 × 64 GiB Micron, DDR5-5600, Multi-bit ECC) and full AVX-512.
+Full hardware details are in `README.md`.
+
+## Where to go next
+
+* **Design philosophy** — `vignette("dataprep-philosophy")`.
+  Why the pipeline has the shape it does, and how each step
+  enforces a physical constraint.
+
+* **Cleaning pipeline walkthrough** — `vignette("dataprep-cleaning")`.
+  Step-by-step execution on a real dataset.
+
+* **Performance and cross-engine consistency** —
+  `vignette("dataprep-performance")`. Full benchmark tables and
+  8-engine consistency checks.
+
+* **Upgrading from 0.1.5 to 0.1.8** —
+  `vignette("dataprep-migration")`. Behaviour changes and the
+  migration checklist.
+
+* **Fast reshaping** — `vignette("dataprep-melt-dcast")`.
+
+## Session info
+
+```{r}
+sessionInfo()
+```
